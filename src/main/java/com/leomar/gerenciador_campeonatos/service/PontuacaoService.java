@@ -27,6 +27,16 @@ public class PontuacaoService {
         Map<Categoria, List<ResultadoBateria>> resultadosPorCategoria = gridGeral.stream()
                 .collect(Collectors.groupingBy(resultado -> resultado.getPiloto().getCategoria()));
 
-        // O próximo passo acontece aqui!
+        // Percorrendo a lista de resultados de uma categoria específica
+        for (int i = 0; i < resultadosDaCategoria.size(); i++) {
+            ResultadoBateria resultado = resultadosDaCategoria.get(i);
+            int posicaoNaCategoria = i + 1;
+
+            // Buscando os pontos na tabela da categoria
+            TabelaPontuacao tabela = categoria.getTabelaPontuacao();
+            Integer pontos = tabela.getPontosPorPosicao().getOrDefault(posicaoNaCategoria, 0);
+
+
+        }
     }
 }
