@@ -21,6 +21,8 @@ public class ResultadoBateria {
 
     private Integer posicaoChegada;
 
+    private Integer pontos;
+
     public Long getId() {
         return id;
     }
@@ -51,5 +53,13 @@ public class ResultadoBateria {
 
     public void setBateria(Bateria bateria) {
         this.bateria = bateria;
+    }
+
+    public Integer getPontos() {
+        return pontos;
+    }
+
+    public void setPontos(Integer pontos) {
+        this.pontos = pontos;
     }
 }

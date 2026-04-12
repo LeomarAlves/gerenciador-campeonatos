@@ -27,16 +27,29 @@ public class PontuacaoService {
         Map<Categoria, List<ResultadoBateria>> resultadosPorCategoria = gridGeral.stream()
                 .collect(Collectors.groupingBy(resultado -> resultado.getPiloto().getCategoria()));
 
-        // Percorrendo a lista de resultados de uma categoria específica
-        for (int i = 0; i < resultadosDaCategoria.size(); i++) {
-            ResultadoBateria resultado = resultadosDaCategoria.get(i);
-            int posicaoNaCategoria = i + 1;
+        // 3. O NOVO PASSO: Percorre cada grupo de categoria que foi separado
+        for (Map.Entry<Categoria, List<ResultadoBateria>> grupo : resultadosPorCategoria.entrySet()) {
 
-            // Buscando os pontos na tabela da categoria
-            TabelaPontuacao tabela = categoria.getTabelaPontuacao();
-            Integer pontos = tabela.getPontosPorPosicao().getOrDefault(posicaoNaCategoria, 0);
+            Categoria categoria = grupo.getKey();
+            List<ResultadoBateria> resultadosDaCategoria = grupo.getValue();
 
+            // 4. Agora sim, percorre a lista de resultados apenas dessa categoria
+            for (int i = 0; i < resultadosDaCategoria.size(); i++) {
+                ResultadoBateria resultado = resultadosDaCategoria.get(i);
+                int posicaoNaCategoria = i + 1; // Índice 0 é o 1º lugar
 
+                // Buscando os pontos na tabela da categoria
+                TabelaPontuacao tabela = categoria.getTabelaPontuacao();
+                if (tabela != null) {
+                    Integer pontos = tabela.getPontosPorPosicao().getOrDefault(posicaoNaCategoria, 0);
+                    resultado.setPontos(pontos);
+                } else {
+                    resultado.setPontos(0); // Se não tem tabela, não ganha pontos
+                }
+
+            }
         }
+
+        // (No mundo real, aqui você faria resultadoRepository.saveAll(gridGeral) para salvar no SQLite)
     }
 }
