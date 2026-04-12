@@ -6,6 +6,7 @@ import com.leomar.gerenciador_campeonatos.service.RelatorioService;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -14,6 +15,7 @@ import java.util.List;
 
 // 1. Avisa o Spring que esta classe vai expor rotas na internet
 @RestController
+@CrossOrigin(origins = "*")
 // 2. Define o endereço base. Tudo aqui começará com /api/relatorios
 @RequestMapping("/api/relatorios")
 public class RelatorioController {
