@@ -5,6 +5,9 @@ let bateriaAtivaId = null;
 document.addEventListener('DOMContentLoaded', () => {
     carregarCampeonatos();
 
+    document.getElementById('form-tabela').addEventListener('submit', salvarTabelaPontos);
+    carregarOpcoesTabelas(); // Carrega as tabelas no menu suspenso logo que o site abre
+
     // Listeners dos Formulários
     document.getElementById('form-campeonato').addEventListener('submit', salvarCampeonato);
     document.getElementById('form-categoria').addEventListener('submit', salvarCategoria);
@@ -283,19 +286,66 @@ async function carregarResultados() {
     } catch (erro) { console.error(erro); }
 }
 
-// A CEREJA DO BOLO: Chama o backend para calcular os pontos
 async function calcularPontosBateria() {
+    const tabelaId = document.getElementById('select-tabela-pontos').value;
+
+    if (!tabelaId) {
+        alert("Por favor, selecione uma Regra de Pontuação antes de calcular!");
+        return;
+    }
+
     try {
-        // Lembre-se que essa rota foi a que criamos com o @PostMapping("/calcular/{bateriaId}")
-        const resposta = await fetch(`http://localhost:8080/api/resultados/calcular/${bateriaAtivaId}`, {
+        // Agora passamos o tabelaId na URL como um parâmetro (?)
+        const resposta = await fetch(`http://localhost:8080/api/resultados/calcular/${bateriaAtivaId}?tabelaId=${tabelaId}`, {
             method: 'POST'
         });
 
         if (resposta.ok) {
             alert('🏁 Sucesso! O Grid Misto foi separado e os pontos foram calculados pelo Java!');
-            carregarResultados(); // Recarrega a tabela para mostrar os pontos atualizados
+            carregarResultados();
         } else {
-            alert('Erro ao calcular pontos. Verifique o console do Java.');
+            alert('Erro ao calcular pontos.');
         }
+    } catch (erro) { console.error(erro); }
+}
+
+async function salvarTabelaPontos(event) {
+    event.preventDefault();
+    const nome = document.getElementById('nome-tabela').value;
+    const valoresTexto = document.getElementById('valores-tabela').value;
+
+    // A mágica da conversão: Transforma "25, 20, 15" num Map (Dicionário) do Java
+    const arrayValores = valoresTexto.split(',');
+    const mapaPontos = {};
+    arrayValores.forEach((valorString, index) => {
+        const posicao = index + 1; // Array começa em 0, Posição começa em 1
+        mapaPontos[posicao] = parseInt(valorString.trim());
+    });
+
+    const pacote = {
+        nome: nome,
+        pontosPorPosicao: mapaPontos
+    };
+
+    try {
+        await fetch('http://localhost:8080/api/tabelas', {
+            method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(pacote)
+        });
+        document.getElementById('nome-tabela').value = '';
+        document.getElementById('valores-tabela').value = '';
+        carregarOpcoesTabelas(); // Atualiza as caixinhas
+        alert('Regra de pontuação criada com sucesso!');
+    } catch (erro) { alert('Erro ao salvar tabela!'); }
+}
+
+async function carregarOpcoesTabelas() {
+    const select = document.getElementById('select-tabela-pontos');
+    try {
+        const resposta = await fetch('http://localhost:8080/api/tabelas');
+        const tabelas = await resposta.json();
+        select.innerHTML = '<option value="">Qual regra usar?</option>';
+        tabelas.forEach(t => {
+            select.innerHTML += `<option value="${t.id}">${t.nome}</option>`;
+        });
     } catch (erro) { console.error(erro); }
 }

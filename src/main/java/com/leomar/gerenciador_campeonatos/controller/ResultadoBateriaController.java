@@ -35,14 +35,15 @@ public class ResultadoBateriaController {
         return ResponseEntity.status(HttpStatus.CREATED).body(resultadoSalvo);
     }
 
-    // =========================================================================
-    // ROTA ESPECIAL: O botão de "Calcular Campeonato" do Frontend chama isso!
-    // =========================================================================
+    // ROTA ESPECIAL ATUALIZADA: Agora recebe a bateria E a tabela escolhida!
     @PostMapping("/calcular/{bateriaId}")
-    public ResponseEntity<String> calcularPontosDaBateria(@PathVariable Long bateriaId) {
-        // Chama a regra de negócio complexa que nós construímos e testamos!
-        pontuacaoService.processarGridMisto(bateriaId);
+    public ResponseEntity<String> calcularPontosDaBateria(
+            @PathVariable Long bateriaId,
+            @RequestParam Long tabelaId) { // <- NOVO PARÂMETRO!
 
-        return ResponseEntity.ok("Pontos calculados e separados por categoria com sucesso!");
+        // Atualize a chamada do seu Service para passar esse novo ID
+        pontuacaoService.processarGridMisto(bateriaId, tabelaId);
+
+        return ResponseEntity.ok("Pontos calculados com sucesso!");
     }
 }
