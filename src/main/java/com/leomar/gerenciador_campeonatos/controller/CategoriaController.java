@@ -10,7 +10,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/categorias")
-@CrossOrigin(origins = "*") // Permite acesso de qualquer Frontend (CORS)
+@CrossOrigin(origins = "*")
 public class CategoriaController {
 
     private final CategoriaRepository categoriaRepository;
@@ -19,20 +19,18 @@ public class CategoriaController {
         this.categoriaRepository = categoriaRepository;
     }
 
-    // GET: Lista todas as categorias
-    @GetMapping
-    public List<Categoria> listarTodas() {
-        return categoriaRepository.findAll();
+    // ATENÇÃO AQUI: Mudamos a rota para /api/categorias/campeonato/1
+    @GetMapping("/campeonato/{campeonatoId}")
+    public List<Categoria> listarPorCampeonato(@PathVariable Long campeonatoId) {
+        return categoriaRepository.findByCampeonatoId(campeonatoId);
     }
 
-    // POST: Salva uma nova categoria no banco
     @PostMapping
     public ResponseEntity<Categoria> criarCategoria(@RequestBody Categoria novaCategoria) {
         Categoria categoriaSalva = categoriaRepository.save(novaCategoria);
         return ResponseEntity.status(HttpStatus.CREATED).body(categoriaSalva);
     }
 
-    // GET: Busca uma categoria específica pelo ID
     @GetMapping("/{id}")
     public ResponseEntity<Categoria> buscarPorId(@PathVariable Long id) {
         return categoriaRepository.findById(id)

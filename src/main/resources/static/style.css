@@ -1,0 +1,111 @@
+/* Paleta de Cores e Configurações Globais */
+:root {
+    --cor-fundo: #f4f7f6;
+    --cor-asfalto: #2c3e50;
+    --cor-vermelho-corrida: #e74c3c;
+    --cor-vermelho-hover: #c0392b;
+    --cor-texto: #333333;
+    --cor-branco: #ffffff;
+    --cor-borda: #e0e0e0;
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+body {
+    background-color: var(--cor-fundo);
+    color: var(--cor-texto);
+}
+
+/* Barra de Navegação Superior */
+.navbar {
+    background-color: var(--cor-asfalto);
+    color: var(--cor-branco);
+    padding: 1rem 2rem;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+}
+
+.logo {
+    font-size: 1.5rem;
+    font-weight: bold;
+    letter-spacing: 1px;
+}
+
+/* Área Centralizada */
+.container {
+    max-width: 1000px;
+    margin: 2rem auto;
+    padding: 0 1rem;
+}
+
+/* Cabeçalho da Tabela e Botão */
+.header-acoes {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.5rem;
+}
+
+/* Estilo do Cartão Branco */
+.card {
+    background-color: var(--cor-branco);
+    border-radius: 8px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+    overflow: hidden;
+}
+
+/* Estilo da Tabela */
+.tabela-pilotos {
+    width: 100%;
+    border-collapse: collapse;
+    text-align: left;
+}
+
+.tabela-pilotos th, .tabela-pilotos td {
+    padding: 1rem;
+    border-bottom: 1px solid var(--cor-borda);
+}
+
+.tabela-pilotos th {
+    background-color: var(--cor-asfalto);
+    color: var(--cor-branco);
+    font-weight: 600;
+}
+
+.tabela-pilotos tbody tr:hover {
+    background-color: #f9f9f9;
+}
+
+.carregando {
+    text-align: center;
+    color: #888;
+    font-style: italic;
+}
+
+/* Estilo dos Botões */
+.btn {
+    padding: 0.6rem 1.2rem;
+    border: none;
+    border-radius: 4px;
+    font-size: 1rem;
+    font-weight: bold;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+.btn-primario {
+    background-color: var(--cor-vermelho-corrida);
+    color: var(--cor-branco);
+}
+
+.btn-primario:hover {
+    background-color: var(--cor-vermelho-hover);
+}
+/* Classe para esconder telas da nossa SPA */
+.oculta {
+    display: none !important;
+}

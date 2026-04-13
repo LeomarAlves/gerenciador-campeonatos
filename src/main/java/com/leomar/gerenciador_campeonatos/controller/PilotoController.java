@@ -39,4 +39,20 @@ public class PilotoController {
                 .map(piloto -> ResponseEntity.ok().body(piloto))
                 .orElse(ResponseEntity.notFound().build());
     }
+    // PUT: Atualiza os dados de um piloto existente
+    @PutMapping("/{id}")
+    public ResponseEntity<Piloto> atualizarPiloto(@PathVariable Long id, @RequestBody Piloto pilotoAtualizado) {
+        return pilotoRepository.findById(id)
+                .map(pilotoExistente -> {
+                    // Atualiza os dados com o que veio do Frontend
+                    pilotoExistente.setNome(pilotoAtualizado.getNome());
+                    pilotoExistente.setNumeroKart(pilotoAtualizado.getNumeroKart());
+                    pilotoExistente.setCategoria(pilotoAtualizado.getCategoria());
+
+                    // Salva a alteração
+                    Piloto pilotoSalvo = pilotoRepository.save(pilotoExistente);
+                    return ResponseEntity.ok().body(pilotoSalvo);
+                })
+                .orElse(ResponseEntity.notFound().build());
+    }
 }

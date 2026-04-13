@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Painel de Corrida - Kart</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<header class="navbar">
+    <div class="logo">🏁 Gerenciador de Kart</div>
+</header>
+
+<main class="container">
+
+    <div id="tela-home">
+        <div class="header-acoes">
+            <h2>Meus Campeonatos</h2>
+        </div>
+
+        <div class="card card-form" style="margin-bottom: 2rem;">
+            <form id="form-campeonato" style="display: flex; gap: 1rem; align-items: flex-end;">
+                <div style="flex-grow: 1;">
+                    <label for="nome-campeonato">Nome do Novo Campeonato:</label>
+                    <input type="text" id="nome-campeonato" placeholder="Ex: Copa Univali Inverno 2026" required>
+                </div>
+                <button type="submit" class="btn btn-primario" style="margin-bottom: 1.2rem;">Criar Campeonato</button>
+            </form>
+        </div>
+
+        <div class="card">
+            <table class="tabela-pilotos">
+                <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Nome do Campeonato</th>
+                    <th>Ações</th>
+                </tr>
+                </thead>
+                <tbody id="tabela-campeonatos-corpo">
+                <tr><td colspan="3" class="carregando">Carregando campeonatos...</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div id="tela-categorias" class="oculta">
+
+        <button id="btn-voltar-home" class="btn" style="margin-bottom: 1rem; background-color: var(--cor-borda);">
+            ⬅ Voltar aos Campeonatos
+        </button>
+
+        <div class="header-acoes">
+            <h2 id="titulo-campeonato-ativo">Campeonato...</h2>
+            <button id="btn-gerar-pdf" class="btn btn-primario">
+                📄 Baixar Relatório Final (PDF)
+            </button>
+        </div>
+
+        <div class="card card-form" style="margin-bottom: 2rem;">
+            <h3>Criar Nova Categoria neste Campeonato</h3>
+            <form id="form-categoria" style="display: flex; gap: 1rem; align-items: flex-end;">
+                <div style="flex-grow: 1;">
+                    <label for="nome-categoria">Nome da Categoria:</label>
+                    <input type="text" id="nome-categoria" placeholder="Ex: F4 Novatos" required>
+                </div>
+                <button type="submit" class="btn btn-primario" style="margin-bottom: 1.2rem;">Salvar Categoria</button>
+            </form>
+        </div>
+
+        <div class="card">
+            <table class="tabela-pilotos">
+                <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Nome da Categoria</th>
+                    <th>Ações</th>
+                </tr>
+                </thead>
+                <tbody id="tabela-categorias-corpo">
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div id="tela-pilotos" class="oculta">
+
+        <button id="btn-voltar-categorias" class="btn" style="margin-bottom: 1rem; background-color: var(--cor-borda);">
+            ⬅ Voltar às Categorias
+        </button>
+
+        <div class="header-acoes">
+            <h2 id="titulo-categoria-ativa">Categoria...</h2>
+        </div>
+
+        <div class="card card-form" style="margin-bottom: 2rem;">
+            <h3 id="titulo-form-piloto">Cadastrar Novo Piloto</h3>
+            <form id="form-piloto">
+                <input type="hidden" id="edit-piloto-id">
+
+                <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 1rem;">
+                    <div>
+                        <label for="nome-piloto">Nome do Piloto:</label>
+                        <input type="text" id="nome-piloto" placeholder="Ex: Ayrton Senna" required>
+                    </div>
+                    <div>
+                        <label for="numero-piloto">Número do Kart:</label>
+                        <input type="number" id="numero-piloto" placeholder="Ex: 12" required>
+                    </div>
+                </div>
+
+                <div style="display: flex; gap: 1rem; margin-top: 1rem;">
+                    <button type="submit" class="btn btn-primario" id="btn-salvar-piloto">Salvar Piloto</button>
+                    <button type="button" class="btn oculta" id="btn-cancelar-edicao" style="background-color: var(--cor-borda);">Cancelar Edição</button>
+                </div>
+            </form>
+        </div>
+
+        <div class="card">
+            <table class="tabela-pilotos">
+                <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Kart</th>
+                    <th>Nome do Piloto</th>
+                    <th>Ações</th>
+                </tr>
+                </thead>
+                <tbody id="tabela-corpo">
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+</main>
+
+<script src="script.js"></script>
+</body>
+</html>

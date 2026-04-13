@@ -9,12 +9,19 @@ public class Categoria {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @Column(nullable = false)
     private String nome;
 
-    // Muitas Categorias usam Uma Tabela de Pontuação
+    // A MÁGICA ACONTECE AQUI: Ligando a Categoria ao Campeonato
+    @ManyToOne
+    @JoinColumn(name = "campeonato_id", nullable = false)
+    private Campeonato campeonato;
+
     @ManyToOne
     @JoinColumn(name = "tabela_pontuacao_id")
     private TabelaPontuacao tabelaPontuacao;
+
+    // --- GETTERS E SETTERS ---
 
     public Long getId() {
         return id;
@@ -30,6 +37,14 @@ public class Categoria {
 
     public void setNome(String nome) {
         this.nome = nome;
+    }
+
+    public Campeonato getCampeonato() {
+        return campeonato;
+    }
+
+    public void setCampeonato(Campeonato campeonato) {
+        this.campeonato = campeonato;
     }
 
     public TabelaPontuacao getTabelaPontuacao() {
