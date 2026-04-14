@@ -7,6 +7,5 @@ import java.util.List;
 
 @Repository
 public interface BateriaRepository extends JpaRepository<Bateria, Long> {
-    // Busca apenas as baterias de um campeonato específico
     List<Bateria> findByCampeonatoId(Long campeonatoId);
 }

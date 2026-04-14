@@ -13,12 +13,9 @@ public class Bateria {
     private String nome; // Ex: "Bateria 1 - Etapa 1"
     private LocalDateTime dataHora;
 
-    // A BLINDAGEM: Cada bateria pertence a um campeonato específico
     @ManyToOne
     @JoinColumn(name = "campeonato_id", nullable = false)
     private Campeonato campeonato;
-
-    // --- GETTERS E SETTERS ---
 
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }

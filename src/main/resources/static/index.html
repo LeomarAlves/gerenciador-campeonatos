@@ -122,15 +122,24 @@
     </div>
 
     <div id="tela-resultados" class="oculta">
-        <button id="btn-voltar-baterias" class="btn" style="margin-bottom: 1rem; background-color: var(--cor-borda);">⬅ Voltar às Baterias</button>
-        <div style="display: flex; gap: 0.5rem; align-items: center;">
-            <select id="select-tabela-pontos" style="margin: 0; padding: 0.6rem; border-radius: 4px; border: 1px solid #ccc;">
-                <option value="">Carregando tabelas...</option>
-            </select>
-            <button id="btn-calcular-pontos" class="btn" style="background-color: #f1c40f; color: black; font-weight: bold; margin: 0;">
-                ✨ Calcular Pontos da Bateria
-            </button>
+
+        <button id="btn-voltar-baterias" class="btn" style="margin-bottom: 1rem; background-color: var(--cor-borda);">
+            ⬅ Voltar às Baterias
+        </button>
+
+        <div class="header-acoes">
+            <h2 id="titulo-bateria-ativa">Lançamento de Resultados</h2>
+
+            <div style="display: flex; gap: 0.5rem; align-items: center;">
+                <select id="select-tabela-pontos" style="margin: 0; padding: 0.6rem; border-radius: 4px; border: 1px solid #ccc;">
+                    <option value="">Carregando tabelas...</option>
+                </select>
+                <button id="btn-calcular-pontos" class="btn" style="background-color: #f1c40f; color: black; font-weight: bold; margin: 0;">
+                    ✨ Calcular Pontos
+                </button>
+            </div>
         </div>
+
         <div class="card card-form" style="margin-bottom: 2rem;">
             <h3>Registrar Chegada</h3>
             <form id="form-resultado" style="display: flex; gap: 1rem; align-items: flex-end;">
@@ -145,6 +154,7 @@
                 <button type="submit" class="btn btn-primario" style="margin-bottom: 1.2rem;">Registrar</button>
             </form>
         </div>
+
         <div class="card">
             <table class="tabela-pilotos">
                 <thead><tr><th>Pos. Geral</th><th>Kart</th><th>Piloto</th><th>Categoria</th><th>Pontos Recebidos</th></tr></thead>

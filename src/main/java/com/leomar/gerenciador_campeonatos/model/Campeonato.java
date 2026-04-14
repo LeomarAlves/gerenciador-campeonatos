@@ -13,19 +13,14 @@ public class Campeonato {
 
     private String nome;
 
-    // A barreira contra o loop infinito
     @JsonIgnore
     @OneToMany(mappedBy = "campeonato", cascade = CascadeType.ALL)
     private List<Categoria> categorias;
 
-    // A barreira contra o loop infinito
     @JsonIgnore
     @OneToMany(mappedBy = "campeonato", cascade = CascadeType.ALL)
     private List<Bateria> baterias;
 
-    // ==========================================
-    // GETTERS E SETTERS (Obrigatórios para o JSON funcionar!)
-    // ==========================================
 
     public Long getId() {
         return id;
