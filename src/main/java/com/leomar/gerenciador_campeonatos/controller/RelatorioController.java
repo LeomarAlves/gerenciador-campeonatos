@@ -1,17 +1,17 @@
 package com.leomar.gerenciador_campeonatos.controller;
 
+import com.leomar.gerenciador_campeonatos.dto.ClassificacaoDTO;
 import com.leomar.gerenciador_campeonatos.dto.RankingItem;
 import com.leomar.gerenciador_campeonatos.model.Piloto;
+import com.leomar.gerenciador_campeonatos.service.PontuacaoService;
 import com.leomar.gerenciador_campeonatos.service.RelatorioService;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.CrossOrigin;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 
 // 1. Avisa o Spring que esta classe vai expor rotas na internet
 @RestController
@@ -21,12 +21,36 @@ import java.util.List;
 public class RelatorioController {
 
     private final RelatorioService relatorioService;
+    private final PontuacaoService pontuacaoService; // ADICIONADO: O Motor de Matemática
 
-    public RelatorioController(RelatorioService relatorioService) {
+    // ATUALIZADO: O construtor agora recebe os dois serviços
+    public RelatorioController(RelatorioService relatorioService, PontuacaoService pontuacaoService) {
         this.relatorioService = relatorioService;
+        this.pontuacaoService = pontuacaoService;
     }
 
-    // 3. Cria uma rota GET específica para o navegador acessar
+    // ========================================================================
+    // NOVA ROTA: Gera os dados do pódio separando as categorias mistas (F4 A, F4 B)
+    // Exemplo de chamada do Frontend: /api/relatorios/etapa?bateriasIds=1,2,3
+    // ========================================================================
+    @GetMapping("/etapa")
+    public ResponseEntity<Map<String, List<ClassificacaoDTO>>> gerarRelatorioEtapa(
+            @RequestParam List<Long> bateriasIds) {
+
+        // Se o frontend mandar a requisição sem nenhuma bateria selecionada, recusa.
+        if (bateriasIds == null || bateriasIds.isEmpty()) {
+            return ResponseEntity.badRequest().build();
+        }
+
+        // Chama a lógica de Merge e separação de categorias que está no Service
+        Map<String, List<ClassificacaoDTO>> resultado = pontuacaoService.gerarRelatorioFinalSelecionado(bateriasIds);
+
+        return ResponseEntity.ok(resultado);
+    }
+
+    // ========================================================================
+    // SUA ROTA ANTIGA (Mantida exatamente como você fez)
+    // ========================================================================
     @GetMapping("/teste-pdf")
     public ResponseEntity<byte[]> testarPdfNoNavegador() {
 

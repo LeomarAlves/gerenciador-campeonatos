@@ -22,26 +22,25 @@ public class ResultadoBateriaController {
         this.pontuacaoService = pontuacaoService;
     }
 
-    // ROTA PARA O FRONTEND LER OS RESULTADOS (O que provavelmente estava faltando!)
     @GetMapping
     public List<ResultadoBateria> listarTodos() {
         return resultadoRepository.findAll();
     }
 
-    // ROTA PARA O FRONTEND SALVAR A POSIÇÃO DE CHEGADA
     @PostMapping
     public ResponseEntity<ResultadoBateria> registrarResultado(@RequestBody ResultadoBateria novoResultado) {
         ResultadoBateria salvo = resultadoRepository.save(novoResultado);
         return ResponseEntity.status(HttpStatus.CREATED).body(salvo);
     }
 
-    // O BOTÃO MÁGICO (Que nós já havíamos configurado)
     @PostMapping("/calcular/{bateriaId}")
     public ResponseEntity<String> calcularPontosDaBateria(
             @PathVariable Long bateriaId,
             @RequestParam Long tabelaId) {
 
-        pontuacaoService.processarGridMisto(bateriaId, tabelaId);
+        // A CORREÇÃO ESTÁ AQUI: Chamando o novo nome do método no Service!
+        pontuacaoService.calcularPontosDaBateria(bateriaId, tabelaId);
+
         return ResponseEntity.ok("Pontos calculados com sucesso!");
     }
 }

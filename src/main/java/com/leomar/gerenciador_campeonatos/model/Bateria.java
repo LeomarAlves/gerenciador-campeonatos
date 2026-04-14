@@ -1,5 +1,6 @@
 package com.leomar.gerenciador_campeonatos.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
 
@@ -10,22 +11,61 @@ public class Bateria {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    private String nome; // Ex: "Bateria 1 - Etapa 1"
+    private String nome;
     private LocalDateTime dataHora;
 
+    // MANTIDO: A bateria continua sabendo qual é o seu campeonato
     @ManyToOne
     @JoinColumn(name = "campeonato_id", nullable = false)
     private Campeonato campeonato;
 
-    public Long getId() { return id; }
-    public void setId(Long id) { this.id = id; }
+    // A CORREÇÃO ESTÁ AQUI: Removemos o 'nullable = false'
+    @ManyToOne
+    @JoinColumn(name = "grupo_grid_id")
+    @JsonIgnore
+    private GrupoGrid grupoGrid;
 
-    public String getNome() { return nome; }
-    public void setNome(String nome) { this.nome = nome; }
+    // ==========================================
+    // GETTERS E SETTERS
+    // ==========================================
 
-    public LocalDateTime getDataHora() { return dataHora; }
-    public void setDataHora(LocalDateTime dataHora) { this.dataHora = dataHora; }
+    public Long getId() {
+        return id;
+    }
 
-    public Campeonato getCampeonato() { return campeonato; }
-    public void setCampeonato(Campeonato campeonato) { this.campeonato = campeonato; }
+    public void setId(Long id) {
+        this.id = id;
+    }
+
+    public String getNome() {
+        return nome;
+    }
+
+    public void setNome(String nome) {
+        this.nome = nome;
+    }
+
+    public LocalDateTime getDataHora() {
+        return dataHora;
+    }
+
+    public void setDataHora(LocalDateTime dataHora) {
+        this.dataHora = dataHora;
+    }
+
+    public Campeonato getCampeonato() {
+        return campeonato;
+    }
+
+    public void setCampeonato(Campeonato campeonato) {
+        this.campeonato = campeonato;
+    }
+
+    public GrupoGrid getGrupoGrid() {
+        return grupoGrid;
+    }
+
+    public void setGrupoGrid(GrupoGrid grupoGrid) {
+        this.grupoGrid = grupoGrid;
+    }
 }

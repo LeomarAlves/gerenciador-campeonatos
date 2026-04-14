@@ -1,5 +1,6 @@
 package com.leomar.gerenciador_campeonatos.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 
 @Entity
@@ -12,16 +13,25 @@ public class Categoria {
     @Column(nullable = false)
     private String nome;
 
-    // A MÁGICA ACONTECE AQUI: Ligando a Categoria ao Campeonato
+    // A MANTIDA: A categoria ainda sabe de qual campeonato ela faz parte
     @ManyToOne
     @JoinColumn(name = "campeonato_id", nullable = false)
     private Campeonato campeonato;
 
+    // A NOVA "FECHADURA": Ligando a Categoria ao GrupoGrid (O Erro estava aqui!)
+    @ManyToOne
+    @JoinColumn(name = "grupo_grid_id")
+    @JsonIgnore // Evita aquele loop infinito do JSON que já conhecemos
+    private GrupoGrid grupoGrid;
+
+    // A tabela de pontos que havíamos criado antes
     @ManyToOne
     @JoinColumn(name = "tabela_pontuacao_id")
     private TabelaPontuacao tabelaPontuacao;
 
-    // --- GETTERS E SETTERS ---
+    // ==========================================
+    // GETTERS E SETTERS OBRIGATÓRIOS
+    // ==========================================
 
     public Long getId() {
         return id;
@@ -45,6 +55,14 @@ public class Categoria {
 
     public void setCampeonato(Campeonato campeonato) {
         this.campeonato = campeonato;
+    }
+
+    public GrupoGrid getGrupoGrid() {
+        return grupoGrid;
+    }
+
+    public void setGrupoGrid(GrupoGrid grupoGrid) {
+        this.grupoGrid = grupoGrid;
     }
 
     public TabelaPontuacao getTabelaPontuacao() {
