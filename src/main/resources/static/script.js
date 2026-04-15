@@ -28,7 +28,14 @@ document.addEventListener('DOMContentLoaded', () => {
     // Ações Principais
     document.getElementById('btn-ir-baterias')?.addEventListener('click', abrirTelaBaterias);
     document.getElementById('btn-calcular-pontos')?.addEventListener('click', calcularPontosBateria);
-    document.getElementById('btn-imprimir-pdf')?.addEventListener('click', () => window.print());
+    document.getElementById('btn-imprimir-pdf')?.addEventListener('click', () => {
+        const checkboxes = document.querySelectorAll('.chk-bateria:checked');
+        const ids = Array.from(checkboxes).map(chk => chk.value).join(',');
+        const nomeCamp = document.getElementById('titulo-campeonato-ativo').innerText.replace('🏁 ', '');
+
+        // Redireciona o navegador para a rota do Java, forçando o download do arquivo!
+        window.open(`http://localhost:8080/api/relatorios/etapa/pdf?bateriasIds=${ids}&nomeCampeonato=${encodeURIComponent(nomeCamp)}`, '_blank');
+    });
 
     // O NOSSO BOTÃO DE SOMAR AS BATERIAS DA TELA 4:
     document.getElementById('btn-gerar-relatorio-selecionadas')?.addEventListener('click', gerarRelatorioDasSelecionadas);
@@ -115,7 +122,26 @@ async function salvarBateria(e) { e.preventDefault(); const n = document.getElem
 
 function abrirResultadosBateria(id, nome) { bateriaAtivaId = id; document.getElementById('titulo-bateria-ativa').innerText = "🏁 " + nome; esconderTodasAsTelas(); document.getElementById('tela-resultados').classList.remove('oculta'); carregarOpcoesPilotos(); carregarResultados(); }
 async function carregarOpcoesPilotos() { const s = document.getElementById('select-piloto-resultado'); try { const rc = await fetch(`http://localhost:8080/api/categorias/campeonato/${campeonatoAtivoId}`); const ids = (await rc.json()).map(c => c.id); const rp = await fetch('http://localhost:8080/api/pilotos'); const ps = (await rp.json()).filter(p => p.categoria && ids.includes(p.categoria.id)); s.innerHTML = '<option value="">Selecione o piloto...</option>'; ps.forEach(p => s.innerHTML += `<option value="${p.id}">Kart #${p.numeroKart} - ${p.nome} (${p.categoria.nome})</option>`); } catch (e) { console.error(e); } }
-async function salvarResultado(e) { e.preventDefault(); const pid = document.getElementById('select-piloto-resultado').value; const pos = document.getElementById('posicao-chegada').value; try { await fetch('http://localhost:8080/api/resultados', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ bateria: { id: bateriaAtivaId }, piloto: { id: parseInt(pid) }, posicaoChegada: parseInt(pos) }) }); document.getElementById('posicao-chegada').value = ''; carregarResultados(); } catch (e) { alert('Erro!'); } }
+async function salvarResultado(event) {
+    event.preventDefault();
+    const pilotoId = document.getElementById('select-piloto-resultado').value;
+    const posicao = document.getElementById('posicao-chegada').value;
+    const marcouNc = document.getElementById('checkbox-nc').checked; // Lê o status do checkbox
+
+    const pacote = {
+        bateria: { id: bateriaAtivaId },
+        piloto: { id: parseInt(pilotoId) },
+        posicaoChegada: parseInt(posicao),
+        nc: marcouNc // Manda pro Java!
+    };
+
+    try {
+        await fetch('http://localhost:8080/api/resultados', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(pacote) });
+        document.getElementById('posicao-chegada').value = '';
+        document.getElementById('checkbox-nc').checked = false; // Limpa pra próxima leitura
+        carregarResultados();
+    } catch (erro) { alert('Erro!'); }
+}
 async function carregarResultados() { const tab = document.getElementById('tabela-resultados-corpo'); try { const res = await fetch('http://localhost:8080/api/resultados'); const filtrados = (await res.json()).filter(r => r.bateria && r.bateria.id === bateriaAtivaId).sort((a, b) => a.posicaoChegada - b.posicaoChegada); tab.innerHTML = ''; if (filtrados.length === 0) { tab.innerHTML = `<tr><td colspan="5" class="carregando">Sem resultados.</td></tr>`; return; } filtrados.forEach(r => tab.innerHTML += `<tr><td><strong>${r.posicaoChegada}º</strong></td><td>🏎️ ${r.piloto?r.piloto.numeroKart:'-'}</td><td>${r.piloto?r.piloto.nome:'-'}</td><td><span style="font-size: 0.85em; background: #eee; padding: 2px 6px; border-radius: 4px;">${r.piloto&&r.piloto.categoria?r.piloto.categoria.nome:'-'}</span></td><td><strong>${r.pontos!=null?r.pontos:'-'} pts</strong></td></tr>`); } catch (e) { console.error(e); } }
 async function calcularPontosBateria() { const tid = document.getElementById('select-tabela-pontos').value; if (!tid) { alert("Selecione a Regra!"); return; } try { const r = await fetch(`http://localhost:8080/api/resultados/calcular/${bateriaAtivaId}?tabelaId=${tid}`, { method: 'POST' }); if (r.ok) { alert('🏁 Sucesso!'); carregarResultados(); } else { alert('Erro!'); } } catch (e) { console.error(e); } }
 
@@ -162,21 +188,25 @@ async function gerarRelatorioDasSelecionadas() {
 
 function renderizarTabelasMistas() {
     const container = document.getElementById('container-tabelas-classificacao');
-    container.innerHTML = ''; // Limpa o carregando
+    container.innerHTML = '';
 
-    // Pega as "Chaves" do JSON (que são os nomes das categorias: "F4 A", "F4 B")
     const categoriasNomes = Object.keys(dadosRelatorioGlobal);
-
     if (categoriasNomes.length === 0) {
-        container.innerHTML = `<p class="carregando">As baterias selecionadas ainda não possuem resultados processados.</p>`;
-        return;
+        container.innerHTML = `<p class="carregando">Sem resultados.</p>`; return;
     }
 
-    // Para cada categoria, cria um bloco de tabela no HTML
+    // Estratégia inteligente para pegar o nome de todas as baterias que foram cruzadas:
+    let nomesBaterias = [];
+    if (dadosRelatorioGlobal[categoriasNomes[0]].length > 0) {
+        nomesBaterias = Object.keys(dadosRelatorioGlobal[categoriasNomes[0]][0].resultadosPorBateria);
+    }
+
     categoriasNomes.forEach(nomeCat => {
         const pilotosDestaCat = dadosRelatorioGlobal[nomeCat];
 
-        // Cria o título da Categoria (Ex: 🏎️ Resultados: F4 A)
+        // Constrói os cabeçalhos (<th>) dinamicamente baseado em quantas baterias foram somadas
+        let cabecalhoBaterias = nomesBaterias.map(nome => `<th style="text-align: center;">${nome}</th>`).join('');
+
         let htmlBloco = `
             <div style="margin-top: 3rem;">
                 <h3 style="background: #2c3e50; color: white; padding: 10px; border-radius: 5px 5px 0 0; margin-bottom: 0;">
@@ -188,23 +218,32 @@ function renderizarTabelasMistas() {
                             <th>Pos</th>
                             <th>Kart</th>
                             <th>Piloto</th>
-                            <th>Total de Pontos</th>
-                            <th class="no-print">Ajuste Manual</th>
+                            ${cabecalhoBaterias}
+                            <th>Total</th>
+                            <th class="no-print">Ajuste</th>
                         </tr>
                     </thead>
                     <tbody>
         `;
 
-        // Preenche as linhas dos pilotos dessa categoria
         pilotosDestaCat.forEach((linha, index) => {
             const pos = index + 1;
             const medalha = pos === 1 ? '🥇' : (pos === 2 ? '🥈' : (pos === 3 ? '🥉' : pos + 'º'));
+
+            // Constrói os resultados de cada bateria na linha
+            let colunasBaterias = nomesBaterias.map(nome => {
+                let valor = linha.resultadosPorBateria[nome] || "-";
+                // Deixa o NC vermelhinho pra destacar na tabela
+                let estilo = valor === "NC" ? "color: #e74c3c; font-weight: bold;" : "";
+                return `<td style="text-align: center; ${estilo}">${valor}</td>`;
+            }).join('');
 
             htmlBloco += `
                 <tr>
                     <td><strong style="font-size: 1.2em;">${medalha}</strong></td>
                     <td>🏎️ ${linha.piloto.numeroKart}</td>
                     <td><strong>${linha.piloto.nome}</strong></td>
+                    ${colunasBaterias}
                     <td style="color: #27ae60; font-weight: bold; font-size: 1.1em;">${linha.totalPontos} pts</td>
                     <td class="no-print">
                         <button class="btn" style="padding: 2px 5px; background: #eee;" onclick="moverPosicaoMista('${nomeCat}', ${index}, -1)">🔼</button>
@@ -213,9 +252,8 @@ function renderizarTabelasMistas() {
                 </tr>
             `;
         });
-
         htmlBloco += `</tbody></table></div>`;
-        container.innerHTML += htmlBloco; // Injeta na tela
+        container.innerHTML += htmlBloco;
     });
 }
 

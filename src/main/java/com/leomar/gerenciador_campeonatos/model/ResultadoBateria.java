@@ -23,6 +23,8 @@ public class ResultadoBateria {
 
     private Integer pontos;
 
+    private boolean nc;
+
     public Long getId() {
         return id;
     }
@@ -62,4 +64,7 @@ public class ResultadoBateria {
     public void setPontos(Integer pontos) {
         this.pontos = pontos;
     }
+
+    public boolean isNc() { return nc; }
+    public void setNc(boolean nc) { this.nc = nc; }
 }
