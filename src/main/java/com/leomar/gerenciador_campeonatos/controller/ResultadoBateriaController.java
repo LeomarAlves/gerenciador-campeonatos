@@ -38,9 +38,7 @@ public class ResultadoBateriaController {
             @PathVariable Long bateriaId,
             @RequestParam Long tabelaId) {
 
-        // A CORREÇÃO ESTÁ AQUI: Chamando o novo nome do método no Service!
         pontuacaoService.calcularPontosDaBateria(bateriaId, tabelaId);
-
         return ResponseEntity.ok("Pontos calculados com sucesso!");
     }
 }

@@ -1,188 +1,465 @@
+/**
+ * Gerenciador de Campeonatos de Kart - Módulo Frontend (Refatorado)
+ */
+
+const API_BASE_URL = 'http://localhost:8080/api';
+
+// Estado global da aplicação
+let campeonatoAtivoId = null;
+let categoriaAtivaId = null;
+let bateriaAtivaId = null;
+let dadosRelatorioGlobal = null;
+
 document.addEventListener('DOMContentLoaded', () => {
+    inicializarApp();
+});
+
+function inicializarApp() {
     carregarCampeonatos();
     carregarOpcoesTabelas();
 
-    // O sinal de interrogação (?.) impede que o JS trave se não achar o botão na tela!
+    // Mapeamento de formulários
+    const formularios = {
+        'form-campeonato': salvarCampeonato,
+        'form-categoria': salvarCategoria,
+        'form-piloto': salvarPiloto,
+        'form-bateria': salvarBateria,
+        'form-resultado': salvarResultado,
+        'form-tabela': salvarTabelaPontos
+    };
 
-    // Formulários
-    document.getElementById('form-campeonato')?.addEventListener('submit', salvarCampeonato);
-    document.getElementById('form-categoria')?.addEventListener('submit', salvarCategoria);
-    document.getElementById('form-piloto')?.addEventListener('submit', salvarPiloto);
-    document.getElementById('form-bateria')?.addEventListener('submit', salvarBateria);
-    document.getElementById('form-resultado')?.addEventListener('submit', salvarResultado);
-    document.getElementById('form-tabela')?.addEventListener('submit', salvarTabelaPontos);
-
-    // Navegação (Voltar)
-    document.getElementById('btn-voltar-home')?.addEventListener('click', voltarParaHome);
-    document.getElementById('btn-voltar-categorias')?.addEventListener('click', voltarParaCategorias);
-    document.getElementById('btn-cancelar-edicao')?.addEventListener('click', cancelarEdicao);
-    document.getElementById('btn-voltar-baterias')?.addEventListener('click', abrirTelaBaterias);
-
-    document.getElementById('btn-voltar-campeonato-dash')?.addEventListener('click', () => {
-        esconderTodasAsTelas(); document.getElementById('tela-categorias').classList.remove('oculta');
-    });
-    document.getElementById('btn-voltar-dash-classificacao')?.addEventListener('click', () => {
-        esconderTodasAsTelas(); document.getElementById('tela-baterias').classList.remove('oculta');
+    Object.entries(formularios).forEach(([id, handler]) => {
+        document.getElementById(id)?.addEventListener('submit', handler);
     });
 
-    // Ações Principais
-    document.getElementById('btn-ir-baterias')?.addEventListener('click', abrirTelaBaterias);
-    document.getElementById('btn-calcular-pontos')?.addEventListener('click', calcularPontosBateria);
-    document.getElementById('btn-imprimir-pdf')?.addEventListener('click', () => {
-        const checkboxes = document.querySelectorAll('.chk-bateria:checked');
-        const ids = Array.from(checkboxes).map(chk => chk.value).join(',');
-        const nomeCamp = document.getElementById('titulo-campeonato-ativo').innerText.replace('🏁 ', '');
+    // Mapeamento de botões de navegação
+    configurarNavegacao();
 
-        // Redireciona o navegador para a rota do Java, forçando o download do arquivo!
-        window.open(`http://localhost:8080/api/relatorios/etapa/pdf?bateriasIds=${ids}&nomeCampeonato=${encodeURIComponent(nomeCamp)}`, '_blank');
-    });
-
-    // O NOSSO BOTÃO DE SOMAR AS BATERIAS DA TELA 4:
+    // Ações de relatório e impressão
+    document.getElementById('btn-imprimir-pdf')?.addEventListener('click', baixarPdfOficial);
     document.getElementById('btn-gerar-relatorio-selecionadas')?.addEventListener('click', gerarRelatorioDasSelecionadas);
-
-    // BÔNUS: Um aviso no botão antigo de "Ver Classificação Final" da Tela 2
+    
+    // Alerta de legado
     document.getElementById('btn-gerar-pdf')?.addEventListener('click', () => {
-        alert("Para gerar a classificação final Oficial, clique no botão verde 'Ir para Corridas', marque as caixinhas das baterias que deseja somar e clique em 'Somar Baterias Selecionadas'.");
-    });
-});
-
-function esconderTodasAsTelas() {
-    ['tela-home', 'tela-categorias', 'tela-pilotos', 'tela-baterias', 'tela-resultados', 'tela-classificacao'].forEach(id => {
-        document.getElementById(id).classList.add('oculta');
+        alert("Para gerar a classificação final Oficial, use a tela de 'Corridas' e selecione as baterias desejadas.");
     });
 }
 
-// (TELA 1 e 2 - Mantidas iguaizinhas)
-async function carregarCampeonatos() {
-    const tabela = document.getElementById('tabela-campeonatos-corpo');
+function configurarNavegacao() {
+    const navegação = {
+        'btn-voltar-home': voltarParaHome,
+        'btn-voltar-categorias': voltarParaCategorias,
+        'btn-cancelar-edicao': cancelarEdicao,
+        'btn-voltar-baterias': abrirTelaBaterias,
+        'btn-ir-baterias': abrirTelaBaterias,
+        'btn-calcular-pontos': calcularPontosBateria
+    };
+
+    Object.entries(navegação).forEach(([id, handler]) => {
+        document.getElementById(id)?.addEventListener('click', handler);
+    });
+
+    // Atalhos simples
+    document.getElementById('btn-voltar-campeonato-dash')?.addEventListener('click', () => mostrarTela('tela-categorias'));
+    document.getElementById('btn-voltar-dash-classificacao')?.addEventListener('click', () => mostrarTela('tela-baterias'));
+}
+
+/**
+ * Utilitário para chamadas de API
+ */
+async function apiFetch(endpoint, options = {}) {
     try {
-        const res = await fetch('http://localhost:8080/api/campeonatos');
-        const camps = await res.json();
-        tabela.innerHTML = '';
-        if (camps.length === 0) { tabela.innerHTML = `<tr><td colspan="3" class="carregando">Nenhum campeonato.</td></tr>`; return; }
-        camps.forEach(c => tabela.innerHTML += `<tr><td>#${c.id}</td><td><strong>${c.nome}</strong></td><td><button class="btn btn-primario" onclick="abrirCampeonato(${c.id}, '${c.nome}')">Gerenciar ➔</button></td></tr>`);
-    } catch (e) { console.error(e); }
+        const response = await fetch(`${API_BASE_URL}${endpoint}`, {
+            ...options,
+            headers: {
+                'Content-Type': 'application/json',
+                ...options.headers
+            }
+        });
+
+        if (!response.ok) throw new Error(`Erro na requisição: ${response.statusText}`);
+        
+        const contentType = response.headers.get('content-type');
+        if (contentType && contentType.includes('application/json')) {
+            return await response.json();
+        }
+        return response;
+    } catch (error) {
+        console.error(`Falha na API (${endpoint}):`, error);
+        throw error;
+    }
+}
+
+function mostrarTela(idTela) {
+    const telas = ['tela-home', 'tela-categorias', 'tela-pilotos', 'tela-baterias', 'tela-resultados', 'tela-classificacao'];
+    telas.forEach(id => {
+        const elemento = document.getElementById(id);
+        if (elemento) {
+            elemento.classList.toggle('oculta', id !== idTela);
+        }
+    });
+}
+
+// --- TELA 1: CAMPEONATOS ---
+
+async function carregarCampeonatos() {
+    const tabelaCorpo = document.getElementById('tabela-campeonatos-corpo');
+    try {
+        const campeonatos = await apiFetch('/campeonatos');
+        tabelaCorpo.innerHTML = '';
+
+        if (campeonatos.length === 0) {
+            tabelaCorpo.innerHTML = `<tr><td colspan="3" class="carregando">Nenhum campeonato cadastrado.</td></tr>`;
+            return;
+        }
+
+        campeonatos.forEach(camp => {
+            const linha = `
+                <tr>
+                    <td>#${camp.id}</td>
+                    <td><strong>${camp.nome}</strong></td>
+                    <td><button class="btn btn-primario" onclick="abrirCampeonato(${camp.id}, '${camp.nome}')">Gerenciar ➔</button></td>
+                </tr>`;
+            tabelaCorpo.insertAdjacentHTML('beforeend', linha);
+        });
+    } catch (e) {
+        tabelaCorpo.innerHTML = `<tr><td colspan="3">Erro ao carregar dados.</td></tr>`;
+    }
 }
 
 async function salvarCampeonato(e) {
-    e.preventDefault(); const nome = document.getElementById('nome-campeonato').value;
-    try { await fetch('http://localhost:8080/api/campeonatos', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ nome: nome }) }); document.getElementById('nome-campeonato').value = ''; carregarCampeonatos(); } catch (e) { alert('Erro!'); }
+    e.preventDefault();
+    const inputNome = document.getElementById('nome-campeonato');
+    try {
+        await apiFetch('/campeonatos', {
+            method: 'POST',
+            body: JSON.stringify({ nome: inputNome.value })
+        });
+        inputNome.value = '';
+        carregarCampeonatos();
+    } catch (e) { alert('Erro ao salvar campeonato.'); }
 }
 
-function abrirCampeonato(id, nome) { campeonatoAtivoId = id; document.getElementById('titulo-campeonato-ativo').innerText = "🏁 " + nome; esconderTodasAsTelas(); document.getElementById('tela-categorias').classList.remove('oculta'); carregarCategorias(); }
-function voltarParaHome() { campeonatoAtivoId = null; esconderTodasAsTelas(); document.getElementById('tela-home').classList.remove('oculta'); }
+function abrirCampeonato(id, nome) {
+    campeonatoAtivoId = id;
+    document.getElementById('titulo-campeonato-ativo').innerText = `🏁 ${nome}`;
+    mostrarTela('tela-categorias');
+    carregarCategorias();
+}
+
+function voltarParaHome() {
+    campeonatoAtivoId = null;
+    mostrarTela('tela-home');
+}
+
+// --- TELA 2: CATEGORIAS ---
 
 async function carregarCategorias() {
-    const tabela = document.getElementById('tabela-categorias-corpo');
+    const tabelaCorpo = document.getElementById('tabela-categorias-corpo');
     try {
-        const res = await fetch(`http://localhost:8080/api/categorias/campeonato/${campeonatoAtivoId}`); const cats = await res.json(); tabela.innerHTML = '';
-        if (cats.length === 0) { tabela.innerHTML = `<tr><td colspan="3" class="carregando">Nenhuma categoria.</td></tr>`; return; }
-        cats.forEach(c => tabela.innerHTML += `<tr><td>#${c.id}</td><td><strong>${c.nome}</strong></td><td><button class="btn btn-primario" onclick="abrirCategoria(${c.id}, '${c.nome}')">Ver Pilotos ➔</button></td></tr>`);
-    } catch (e) { console.error(e); }
-}
+        const categorias = await apiFetch(`/categorias/campeonato/${campeonatoAtivoId}`);
+        tabelaCorpo.innerHTML = '';
 
-async function salvarCategoria(e) { e.preventDefault(); const nome = document.getElementById('nome-categoria').value; try { await fetch('http://localhost:8080/api/categorias', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ nome: nome, campeonato: { id: campeonatoAtivoId } }) }); document.getElementById('nome-categoria').value = ''; carregarCategorias(); } catch (e) { alert('Erro!'); } }
+        if (categorias.length === 0) {
+            tabelaCorpo.innerHTML = `<tr><td colspan="3" class="carregando">Nenhuma categoria cadastrada.</td></tr>`;
+            return;
+        }
 
-// (TELA 3 - Pilotos - Mantida iguaizinha)
-function abrirCategoria(id, nome) { categoriaAtivaId = id; document.getElementById('titulo-categoria-ativa').innerText = "🏎️ Categoria: " + nome; esconderTodasAsTelas(); document.getElementById('tela-pilotos').classList.remove('oculta'); carregarPilotos(); }
-function voltarParaCategorias() { categoriaAtivaId = null; cancelarEdicao(); esconderTodasAsTelas(); document.getElementById('tela-categorias').classList.remove('oculta'); }
-async function carregarPilotos() { const tabela = document.getElementById('tabela-corpo'); try { const res = await fetch('http://localhost:8080/api/pilotos'); const ps = await res.json(); const pf = ps.filter(p => p.categoria && p.categoria.id === categoriaAtivaId); tabela.innerHTML = ''; if (pf.length === 0) { tabela.innerHTML = `<tr><td colspan="4" class="carregando">Nenhum piloto.</td></tr>`; return; } pf.forEach(p => tabela.innerHTML += `<tr><td>#${p.id}</td><td>🏎️ <strong>${p.numeroKart}</strong></td><td>${p.nome}</td><td><button class="btn" style="background-color: #f39c12; color: white;" onclick="prepararEdicao(${p.id}, '${p.nome}', ${p.numeroKart})">✏️ Editar</button></td></tr>`); } catch (e) { console.error(e); } }
-async function salvarPiloto(e) { e.preventDefault(); const id = document.getElementById('edit-piloto-id').value; const dados = { nome: document.getElementById('nome-piloto').value, numeroKart: parseInt(document.getElementById('numero-piloto').value), categoria: { id: categoriaAtivaId } }; try { if (id) { await fetch(`http://localhost:8080/api/pilotos/${id}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(dados) }); } else { await fetch('http://localhost:8080/api/pilotos', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(dados) }); } cancelarEdicao(); carregarPilotos(); } catch (e) { alert('Erro!'); } }
-function prepararEdicao(id, nome, num) { document.getElementById('edit-piloto-id').value = id; document.getElementById('nome-piloto').value = nome; document.getElementById('numero-piloto').value = num; document.getElementById('titulo-form-piloto').innerText = "✏️ Editando Piloto"; document.getElementById('btn-salvar-piloto').innerText = "Atualizar"; document.getElementById('btn-cancelar-edicao').classList.remove('oculta'); }
-function cancelarEdicao() { document.getElementById('edit-piloto-id').value = ''; document.getElementById('nome-piloto').value = ''; document.getElementById('numero-piloto').value = ''; document.getElementById('titulo-form-piloto').innerText = "Cadastrar Novo Piloto"; document.getElementById('btn-salvar-piloto').innerText = "Salvar Piloto"; document.getElementById('btn-cancelar-edicao').classList.add('oculta'); }
-
-// (TABELAS DE PONTOS)
-async function salvarTabelaPontos(e) { e.preventDefault(); const nome = document.getElementById('nome-tabela').value; const vals = document.getElementById('valores-tabela').value.split(','); const map = {}; vals.forEach((v, i) => map[i + 1] = parseInt(v.trim())); try { await fetch('http://localhost:8080/api/tabelas', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ nome: nome, pontosPorPosicao: map }) }); document.getElementById('nome-tabela').value = ''; document.getElementById('valores-tabela').value = ''; carregarOpcoesTabelas(); alert('Regra salva!'); } catch (e) { alert('Erro!'); } }
-async function carregarOpcoesTabelas() { const s = document.getElementById('select-tabela-pontos'); try { const res = await fetch('http://localhost:8080/api/tabelas'); const t = await res.json(); if(s) { s.innerHTML = '<option value="">Qual regra usar?</option>'; t.forEach(x => s.innerHTML += `<option value="${x.id}">${x.nome}</option>`); } } catch (e) { console.error(e); } }
-
-// ==========================================
-// TELA 4 e 5: BATERIAS E RESULTADOS (ATUALIZADA COM CHECKBOXES)
-// ==========================================
-function abrirTelaBaterias() { esconderTodasAsTelas(); document.getElementById('tela-baterias').classList.remove('oculta'); carregarBaterias(); }
-
-async function carregarBaterias() {
-    const tabela = document.getElementById('tabela-baterias-corpo');
-    try {
-        const res = await fetch(`http://localhost:8080/api/baterias/campeonato/${campeonatoAtivoId}`);
-        const bat = await res.json();
-        tabela.innerHTML = '';
-        if (bat.length === 0) { tabela.innerHTML = `<tr><td colspan="4" class="carregando">Nenhuma corrida registrada.</td></tr>`; return; }
-        bat.forEach(b => {
-            // NOVO: Adicionado o <input type="checkbox"> na primeira coluna
-            tabela.innerHTML += `<tr>
-                <td style="text-align: center;"><input type="checkbox" class="chk-bateria" value="${b.id}" style="transform: scale(1.5);"></td>
-                <td>#${b.id}</td><td><strong>${b.nome}</strong></td>
-                <td><button class="btn btn-primario" onclick="abrirResultadosBateria(${b.id}, '${b.nome}')">Lançar Resultados ➔</button></td>
-            </tr>`;
+        categorias.forEach(cat => {
+            const linha = `
+                <tr>
+                    <td>#${cat.id}</td>
+                    <td><strong>${cat.nome}</strong></td>
+                    <td><button class="btn btn-primario" onclick="abrirCategoria(${cat.id}, '${cat.nome}')">Ver Pilotos ➔</button></td>
+                </tr>`;
+            tabelaCorpo.insertAdjacentHTML('beforeend', linha);
         });
     } catch (e) { console.error(e); }
 }
 
-async function salvarBateria(e) { e.preventDefault(); const n = document.getElementById('nome-bateria').value; try { await fetch('http://localhost:8080/api/baterias', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ nome: n, campeonato: { id: campeonatoAtivoId } }) }); document.getElementById('nome-bateria').value = ''; carregarBaterias(); } catch (e) { alert('Erro!'); } }
+async function salvarCategoria(e) {
+    e.preventDefault();
+    const inputNome = document.getElementById('nome-categoria');
+    try {
+        await apiFetch('/categorias', {
+            method: 'POST',
+            body: JSON.stringify({
+                nome: inputNome.value,
+                campeonato: { id: campeonatoAtivoId }
+            })
+        });
+        inputNome.value = '';
+        carregarCategorias();
+    } catch (e) { alert('Erro ao salvar categoria.'); }
+}
 
-function abrirResultadosBateria(id, nome) { bateriaAtivaId = id; document.getElementById('titulo-bateria-ativa').innerText = "🏁 " + nome; esconderTodasAsTelas(); document.getElementById('tela-resultados').classList.remove('oculta'); carregarOpcoesPilotos(); carregarResultados(); }
-async function carregarOpcoesPilotos() { const s = document.getElementById('select-piloto-resultado'); try { const rc = await fetch(`http://localhost:8080/api/categorias/campeonato/${campeonatoAtivoId}`); const ids = (await rc.json()).map(c => c.id); const rp = await fetch('http://localhost:8080/api/pilotos'); const ps = (await rp.json()).filter(p => p.categoria && ids.includes(p.categoria.id)); s.innerHTML = '<option value="">Selecione o piloto...</option>'; ps.forEach(p => s.innerHTML += `<option value="${p.id}">Kart #${p.numeroKart} - ${p.nome} (${p.categoria.nome})</option>`); } catch (e) { console.error(e); } }
-async function salvarResultado(event) {
-    event.preventDefault();
-    const pilotoId = document.getElementById('select-piloto-resultado').value;
-    const posicao = document.getElementById('posicao-chegada').value;
-    const marcouNc = document.getElementById('checkbox-nc').checked; // Lê o status do checkbox
+// --- TELA 3: PILOTOS ---
 
-    const pacote = {
-        bateria: { id: bateriaAtivaId },
-        piloto: { id: parseInt(pilotoId) },
-        posicaoChegada: parseInt(posicao),
-        nc: marcouNc // Manda pro Java!
+function abrirCategoria(id, nome) {
+    categoriaAtivaId = id;
+    document.getElementById('titulo-categoria-ativa').innerText = `🏎️ Categoria: ${nome}`;
+    mostrarTela('tela-pilotos');
+    carregarPilotos();
+}
+
+function voltarParaCategorias() {
+    categoriaAtivaId = null;
+    cancelarEdicao();
+    mostrarTela('tela-categorias');
+}
+
+async function carregarPilotos() {
+    const tabelaCorpo = document.getElementById('tabela-corpo');
+    try {
+        const pilotos = await apiFetch('/pilotos');
+        const pilotosFiltrados = pilotos.filter(p => p.categoria?.id === categoriaAtivaId);
+        
+        tabelaCorpo.innerHTML = '';
+        if (pilotosFiltrados.length === 0) {
+            tabelaCorpo.innerHTML = `<tr><td colspan="4" class="carregando">Nenhum piloto nesta categoria.</td></tr>`;
+            return;
+        }
+
+        pilotosFiltrados.forEach(p => {
+            const linha = `
+                <tr>
+                    <td>#${p.id}</td>
+                    <td>🏎️ <strong>${p.numeroKart}</strong></td>
+                    <td>${p.nome}</td>
+                    <td><button class="btn btn-alerta" onclick="prepararEdicao(${p.id}, '${p.nome}', ${p.numeroKart})">✏️ Editar</button></td>
+                </tr>`;
+            tabelaCorpo.insertAdjacentHTML('beforeend', linha);
+        });
+    } catch (e) { console.error(e); }
+}
+
+async function salvarPiloto(e) {
+    e.preventDefault();
+    const id = document.getElementById('edit-piloto-id').value;
+    const dados = {
+        nome: document.getElementById('nome-piloto').value,
+        numeroKart: parseInt(document.getElementById('numero-piloto').value),
+        categoria: { id: categoriaAtivaId }
     };
 
     try {
-        await fetch('http://localhost:8080/api/resultados', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(pacote) });
-        document.getElementById('posicao-chegada').value = '';
-        document.getElementById('checkbox-nc').checked = false; // Limpa pra próxima leitura
-        carregarResultados();
-    } catch (erro) { alert('Erro!'); }
+        const metodo = id ? 'PUT' : 'POST';
+        const url = id ? `/pilotos/${id}` : '/pilotos';
+        await apiFetch(url, { method: metodo, body: JSON.stringify(dados) });
+        
+        cancelarEdicao();
+        carregarPilotos();
+    } catch (e) { alert('Erro ao salvar piloto.'); }
 }
-async function carregarResultados() { const tab = document.getElementById('tabela-resultados-corpo'); try { const res = await fetch('http://localhost:8080/api/resultados'); const filtrados = (await res.json()).filter(r => r.bateria && r.bateria.id === bateriaAtivaId).sort((a, b) => a.posicaoChegada - b.posicaoChegada); tab.innerHTML = ''; if (filtrados.length === 0) { tab.innerHTML = `<tr><td colspan="5" class="carregando">Sem resultados.</td></tr>`; return; } filtrados.forEach(r => tab.innerHTML += `<tr><td><strong>${r.posicaoChegada}º</strong></td><td>🏎️ ${r.piloto?r.piloto.numeroKart:'-'}</td><td>${r.piloto?r.piloto.nome:'-'}</td><td><span style="font-size: 0.85em; background: #eee; padding: 2px 6px; border-radius: 4px;">${r.piloto&&r.piloto.categoria?r.piloto.categoria.nome:'-'}</span></td><td><strong>${r.pontos!=null?r.pontos:'-'} pts</strong></td></tr>`); } catch (e) { console.error(e); } }
-async function calcularPontosBateria() { const tid = document.getElementById('select-tabela-pontos').value; if (!tid) { alert("Selecione a Regra!"); return; } try { const r = await fetch(`http://localhost:8080/api/resultados/calcular/${bateriaAtivaId}?tabelaId=${tid}`, { method: 'POST' }); if (r.ok) { alert('🏁 Sucesso!'); carregarResultados(); } else { alert('Erro!'); } } catch (e) { console.error(e); } }
 
-// ==========================================
-// TELA 6: RELATÓRIO MISTO E SEPARADO
-// ==========================================
+function prepararEdicao(id, nome, num) {
+    document.getElementById('edit-piloto-id').value = id;
+    document.getElementById('nome-piloto').value = nome;
+    document.getElementById('numero-piloto').value = num;
+    document.getElementById('titulo-form-piloto').innerText = "✏️ Editando Piloto";
+    document.getElementById('btn-salvar-piloto').innerText = "Atualizar";
+    document.getElementById('btn-cancelar-edicao').classList.remove('oculta');
+}
+
+function cancelarEdicao() {
+    ['edit-piloto-id', 'nome-piloto', 'numero-piloto'].forEach(id => document.getElementById(id).value = '');
+    document.getElementById('titulo-form-piloto').innerText = "Cadastrar Novo Piloto";
+    document.getElementById('btn-salvar-piloto').innerText = "Salvar Piloto";
+    document.getElementById('btn-cancelar-edicao').classList.add('oculta');
+}
+
+// --- TELA 4: BATERIAS (CORRIDAS) ---
+
+function abrirTelaBaterias() {
+    mostrarTela('tela-baterias');
+    carregarBaterias();
+}
+
+async function carregarBaterias() {
+    const tabelaCorpo = document.getElementById('tabela-baterias-corpo');
+    try {
+        const baterias = await apiFetch(`/baterias/campeonato/${campeonatoAtivoId}`);
+        tabelaCorpo.innerHTML = '';
+
+        if (baterias.length === 0) {
+            tabelaCorpo.innerHTML = `<tr><td colspan="4" class="carregando">Nenhuma corrida registrada.</td></tr>`;
+            return;
+        }
+
+        baterias.forEach(b => {
+            const linha = `
+                <tr>
+                    <td style="text-align: center;"><input type="checkbox" class="chk-bateria" value="${b.id}" style="transform: scale(1.5);"></td>
+                    <td>#${b.id}</td>
+                    <td><strong>${b.nome}</strong></td>
+                    <td><button class="btn btn-primario" onclick="abrirResultadosBateria(${b.id}, '${b.nome}')">Lançar Resultados ➔</button></td>
+                </tr>`;
+            tabelaCorpo.insertAdjacentHTML('beforeend', linha);
+        });
+    } catch (e) { console.error(e); }
+}
+
+async function salvarBateria(e) {
+    e.preventDefault();
+    const inputNome = document.getElementById('nome-bateria');
+    try {
+        await apiFetch('/baterias', {
+            method: 'POST',
+            body: JSON.stringify({
+                nome: inputNome.value,
+                campeonato: { id: campeonatoAtivoId }
+            })
+        });
+        inputNome.value = '';
+        carregarBaterias();
+    } catch (e) { alert('Erro ao salvar bateria.'); }
+}
+
+// --- TELA 5: RESULTADOS DA BATERIA ---
+
+function abrirResultadosBateria(id, nome) {
+    bateriaAtivaId = id;
+    document.getElementById('titulo-bateria-ativa').innerText = `🏁 ${nome}`;
+    mostrarTela('tela-resultados');
+    carregarOpcoesPilotos();
+    carregarResultados();
+}
+
+async function carregarOpcoesPilotos() {
+    const select = document.getElementById('select-piloto-resultado');
+    try {
+        const categorias = await apiFetch(`/categorias/campeonato/${campeonatoAtivoId}`);
+        const idsCategorias = categorias.map(c => c.id);
+        
+        const todosPilotos = await apiFetch('/pilotos');
+        const pilotosValidos = todosPilotos.filter(p => p.categoria && idsCategorias.includes(p.categoria.id));
+
+        select.innerHTML = '<option value="">Selecione o piloto...</option>';
+        pilotosValidos.forEach(p => {
+            select.insertAdjacentHTML('beforeend', `<option value="${p.id}">Kart #${p.numeroKart} - ${p.nome} (${p.categoria.nome})</option>`);
+        });
+    } catch (e) { console.error(e); }
+}
+
+async function salvarResultado(e) {
+    e.preventDefault();
+    const pilotoId = document.getElementById('select-piloto-resultado').value;
+    const posicao = document.getElementById('posicao-chegada').value;
+    const marcouNc = document.getElementById('checkbox-nc').checked;
+
+    const dados = {
+        bateria: { id: bateriaAtivaId },
+        piloto: { id: parseInt(pilotoId) },
+        posicaoChegada: parseInt(posicao),
+        nc: marcouNc
+    };
+
+    try {
+        await apiFetch('/resultados', { method: 'POST', body: JSON.stringify(dados) });
+        document.getElementById('posicao-chegada').value = '';
+        document.getElementById('checkbox-nc').checked = false;
+        carregarResultados();
+    } catch (e) { alert('Erro ao salvar resultado.'); }
+}
+
+async function carregarResultados() {
+    const tabelaCorpo = document.getElementById('tabela-resultados-corpo');
+    try {
+        const resultados = await apiFetch('/resultados');
+        const filtrados = resultados
+            .filter(r => r.bateria?.id === bateriaAtivaId)
+            .sort((a, b) => a.posicaoChegada - b.posicaoChegada);
+
+        tabelaCorpo.innerHTML = '';
+        if (filtrados.length === 0) {
+            tabelaCorpo.innerHTML = `<tr><td colspan="5" class="carregando">Sem resultados lançados.</td></tr>`;
+            return;
+        }
+
+        filtrados.forEach(r => {
+            const linha = `
+                <tr>
+                    <td><strong>${r.posicaoChegada}º</strong></td>
+                    <td>🏎️ ${r.piloto?.numeroKart || '-'}</td>
+                    <td>${r.piloto?.nome || '-'}</td>
+                    <td><span class="badge-categoria">${r.piloto?.categoria?.nome || '-'}</span></td>
+                    <td><strong>${r.pontos != null ? r.pontos : '-'} pts</strong></td>
+                </tr>`;
+            tabelaCorpo.insertAdjacentHTML('beforeend', linha);
+        });
+    } catch (e) { console.error(e); }
+}
+
+async function calcularPontosBateria() {
+    const tabelaId = document.getElementById('select-tabela-pontos').value;
+    if (!tabelaId) return alert("Selecione uma regra de pontuação!");
+
+    try {
+        await apiFetch(`/resultados/calcular/${bateriaAtivaId}?tabelaId=${tabelaId}`, { method: 'POST' });
+        alert('🏁 Pontos calculados com sucesso!');
+        carregarResultados();
+    } catch (e) { alert('Erro ao calcular pontos.'); }
+}
+
+// --- TABELAS DE PONTOS ---
+
+async function carregarOpcoesTabelas() {
+    const select = document.getElementById('select-tabela-pontos');
+    if (!select) return;
+
+    try {
+        const tabelas = await apiFetch('/tabelas');
+        select.innerHTML = '<option value="">Qual regra usar?</option>';
+        tabelas.forEach(t => {
+            select.insertAdjacentHTML('beforeend', `<option value="${t.id}">${t.nome}</option>`);
+        });
+    } catch (e) { console.error(e); }
+}
+
+async function salvarTabelaPontos(e) {
+    e.preventDefault();
+    const nome = document.getElementById('nome-tabela').value;
+    const valoresString = document.getElementById('valores-tabela').value;
+    
+    const mapaPontos = {};
+    valoresString.split(',').forEach((val, index) => {
+        mapaPontos[index + 1] = parseInt(val.trim());
+    });
+
+    try {
+        await apiFetch('/tabelas', {
+            method: 'POST',
+            body: JSON.stringify({ nome: nome, pontosPorPosicao: mapaPontos })
+        });
+        document.getElementById('nome-tabela').value = '';
+        document.getElementById('valores-tabela').value = '';
+        carregarOpcoesTabelas();
+        alert('Regra salva com sucesso!');
+    } catch (e) { alert('Erro ao salvar regra.'); }
+}
+
+// --- TELA 6: CLASSIFICAÇÃO FINAL E RELATÓRIOS ---
+
 async function gerarRelatorioDasSelecionadas() {
-    // 1. Pega todas as caixinhas que estão marcadas
-    const checkboxes = document.querySelectorAll('.chk-bateria:checked');
-    if (checkboxes.length === 0) {
-        alert("Por favor, selecione pelo menos uma bateria para gerar o relatório!");
-        return;
+    const selecionadas = Array.from(document.querySelectorAll('.chk-bateria:checked')).map(chk => chk.value);
+    
+    if (selecionadas.length === 0) {
+        return alert("Selecione pelo menos uma bateria para o relatório!");
     }
 
-    // 2. Monta a lista de IDs separados por vírgula (Ex: "1,2,3")
-    const ids = Array.from(checkboxes).map(chk => chk.value).join(',');
-
-    esconderTodasAsTelas();
-    document.getElementById('tela-classificacao').classList.remove('oculta');
+    const container = document.getElementById('container-tabelas-classificacao');
+    container.innerHTML = `<p class="carregando">Cruzando dados e processando categorias...</p>`;
+    mostrarTela('tela-classificacao');
 
     const nomeCamp = document.getElementById('titulo-campeonato-ativo').innerText.replace('🏁 ', '');
     document.getElementById('titulo-impressao-campeonato').innerText = nomeCamp;
 
-    const container = document.getElementById('container-tabelas-classificacao');
-    container.innerHTML = `<p class="carregando">Processando cruzamento de dados e calculando pódios...</p>`;
-
     try {
-        // 3. Chama a nossa NOVA ROTA do Java passando os IDs
-        const resposta = await fetch(`http://localhost:8080/api/relatorios/etapa?bateriasIds=${ids}`);
-
-        if (!resposta.ok) throw new Error("Erro na API");
-
-        // 4. Salva o resultado globalmente para podermos mover os pilotos depois
-        dadosRelatorioGlobal = await resposta.json();
-
-        // 5. Desenha as tabelas
+        const ids = selecionadas.join(',');
+        dadosRelatorioGlobal = await apiFetch(`/relatorios/etapa?bateriasIds=${ids}`);
         renderizarTabelasMistas();
-
-    } catch (erro) {
-        console.error(erro);
-        container.innerHTML = `<p style="color: red; text-align: center;">Erro ao gerar relatório. Verifique o servidor Java.</p>`;
+    } catch (e) {
+        container.innerHTML = `<p class="erro">Falha ao gerar relatório.</p>`;
     }
 }
 
@@ -190,85 +467,77 @@ function renderizarTabelasMistas() {
     const container = document.getElementById('container-tabelas-classificacao');
     container.innerHTML = '';
 
-    const categoriasNomes = Object.keys(dadosRelatorioGlobal);
-    if (categoriasNomes.length === 0) {
-        container.innerHTML = `<p class="carregando">Sem resultados.</p>`; return;
+    const categorias = Object.keys(dadosRelatorioGlobal);
+    if (categorias.length === 0) {
+        container.innerHTML = `<p class="carregando">Sem resultados para exibir.</p>`;
+        return;
     }
 
-    // Estratégia inteligente para pegar o nome de todas as baterias que foram cruzadas:
-    let nomesBaterias = [];
-    if (dadosRelatorioGlobal[categoriasNomes[0]].length > 0) {
-        nomesBaterias = Object.keys(dadosRelatorioGlobal[categoriasNomes[0]][0].resultadosPorBateria);
-    }
+    // Identifica os nomes das baterias para as colunas
+    const nomesBaterias = Object.keys(dadosRelatorioGlobal[categorias[0]][0]?.resultadosPorBateria || {});
 
-    categoriasNomes.forEach(nomeCat => {
-        const pilotosDestaCat = dadosRelatorioGlobal[nomeCat];
-
-        // Constrói os cabeçalhos (<th>) dinamicamente baseado em quantas baterias foram somadas
-        let cabecalhoBaterias = nomesBaterias.map(nome => `<th style="text-align: center;">${nome}</th>`).join('');
-
-        let htmlBloco = `
-            <div style="margin-top: 3rem;">
-                <h3 style="background: #2c3e50; color: white; padding: 10px; border-radius: 5px 5px 0 0; margin-bottom: 0;">
-                    🏎️ Categoria: ${nomeCat}
-                </h3>
-                <table class="tabela-pilotos" style="margin-top: 0;">
-                    <thead>
-                        <tr>
-                            <th>Pos</th>
-                            <th>Kart</th>
-                            <th>Piloto</th>
-                            ${cabecalhoBaterias}
-                            <th>Total</th>
-                            <th class="no-print">Ajuste</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-        `;
-
-        pilotosDestaCat.forEach((linha, index) => {
-            const pos = index + 1;
-            const medalha = pos === 1 ? '🥇' : (pos === 2 ? '🥈' : (pos === 3 ? '🥉' : pos + 'º'));
-
-            // Constrói os resultados de cada bateria na linha
-            let colunasBaterias = nomesBaterias.map(nome => {
-                let valor = linha.resultadosPorBateria[nome] || "-";
-                // Deixa o NC vermelhinho pra destacar na tabela
-                let estilo = valor === "NC" ? "color: #e74c3c; font-weight: bold;" : "";
-                return `<td style="text-align: center; ${estilo}">${valor}</td>`;
-            }).join('');
-
-            htmlBloco += `
-                <tr>
-                    <td><strong style="font-size: 1.2em;">${medalha}</strong></td>
-                    <td>🏎️ ${linha.piloto.numeroKart}</td>
-                    <td><strong>${linha.piloto.nome}</strong></td>
-                    ${colunasBaterias}
-                    <td style="color: #27ae60; font-weight: bold; font-size: 1.1em;">${linha.totalPontos} pts</td>
-                    <td class="no-print">
-                        <button class="btn" style="padding: 2px 5px; background: #eee;" onclick="moverPosicaoMista('${nomeCat}', ${index}, -1)">🔼</button>
-                        <button class="btn" style="padding: 2px 5px; background: #eee;" onclick="moverPosicaoMista('${nomeCat}', ${index}, 1)">🔽</button>
-                    </td>
-                </tr>
-            `;
-        });
-        htmlBloco += `</tbody></table></div>`;
-        container.innerHTML += htmlBloco;
+    categorias.forEach(nomeCat => {
+        container.insertAdjacentHTML('beforeend', gerarHtmlTabelaCategoria(nomeCat, dadosRelatorioGlobal[nomeCat], nomesBaterias));
     });
 }
 
-// NOVO: A Função do Diretor de Prova atualizada para lidar com múltiplas tabelas!
+function gerarHtmlTabelaCategoria(nomeCat, pilotos, nomesBaterias) {
+    const colunasBatHeader = nomesBaterias.map(n => `<th style="text-align: center;">${n}</th>`).join('');
+    
+    let html = `
+        <div class="secao-classificacao">
+            <h3 class="titulo-secao-cat">🏎️ Categoria: ${nomeCat}</h3>
+            <table class="tabela-pilotos">
+                <thead>
+                    <tr>
+                        <th>Pos</th><th>Kart</th><th>Piloto</th>
+                        ${colunasBatHeader}
+                        <th>Total</th><th class="no-print">Ajuste</th>
+                    </tr>
+                </thead>
+                <tbody>`;
+
+    pilotos.forEach((p, idx) => {
+        const pos = idx + 1;
+        const medalha = pos === 1 ? '🥇' : (pos === 2 ? '🥈' : (pos === 3 ? '🥉' : `${pos}º`));
+        
+        const colunasBatData = nomesBaterias.map(nome => {
+            const val = p.resultadosPorBateria[nome] || "-";
+            const corNc = val === "NC" ? "color: #e74c3c; font-weight: bold;" : "";
+            return `<td style="text-align: center; ${corNc}">${val}</td>`;
+        }).join('');
+
+        html += `
+            <tr>
+                <td><strong style="font-size: 1.1em;">${medalha}</strong></td>
+                <td>🏎️ ${p.piloto.numeroKart}</td>
+                <td><strong>${p.piloto.nome}</strong></td>
+                ${colunasBatData}
+                <td class="col-total">${p.totalPontos} pts</td>
+                <td class="no-print">
+                    <button class="btn-ajuste" onclick="moverPosicaoMista('${nomeCat}', ${idx}, -1)">🔼</button>
+                    <button class="btn-ajuste" onclick="moverPosicaoMista('${nomeCat}', ${idx}, 1)">🔽</button>
+                </td>
+            </tr>`;
+    });
+
+    return html + `</tbody></table></div>`;
+}
+
 function moverPosicaoMista(nomeCategoria, index, direcao) {
-    const arrayPilotos = dadosRelatorioGlobal[nomeCategoria];
-    const novaPosicao = index + direcao;
+    const lista = dadosRelatorioGlobal[nomeCategoria];
+    const novaPos = index + direcao;
 
-    if (novaPosicao < 0 || novaPosicao >= arrayPilotos.length) return;
+    if (novaPos >= 0 && novaPos < lista.length) {
+        [lista[index], lista[novaPos]] = [lista[novaPos], lista[index]];
+        renderizarTabelasMistas();
+    }
+}
 
-    // Faz a troca (Swap) de posições no array daquela categoria específica
-    const temp = arrayPilotos[index];
-    arrayPilotos[index] = arrayPilotos[novaPosicao];
-    arrayPilotos[novaPosicao] = temp;
-
-    // Redesenha todas as tabelas com a nova ordem
-    renderizarTabelasMistas();
+function baixarPdfOficial() {
+    const ids = Array.from(document.querySelectorAll('.chk-bateria:checked')).map(chk => chk.value).join(',');
+    const nomeCamp = document.getElementById('titulo-campeonato-ativo').innerText.replace('🏁 ', '');
+    
+    const url = `${API_BASE_URL}/relatorios/etapa/pdf?bateriasIds=${ids}&nomeCampeonato=${encodeURIComponent(nomeCamp)}`;
+    window.open(url, '_blank');
 }
