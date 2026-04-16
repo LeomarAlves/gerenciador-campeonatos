@@ -309,6 +309,29 @@ function cancelarEdicao() {
 function abrirTelaBaterias() {
     mostrarTela('tela-baterias');
     carregarBaterias();
+    carregarCheckboxesCategorias();
+}
+
+async function carregarCheckboxesCategorias() {
+    const container = document.getElementById('container-categorias-bateria');
+    try {
+        const categorias = await apiFetch(`/categorias/campeonato/${campeonatoAtivoId}`);
+        container.innerHTML = '';
+        
+        if (categorias.length === 0) {
+            container.innerHTML = '<p style="color: #666; font-style: italic;">Nenhuma categoria cadastrada no campeonato.</p>';
+            return;
+        }
+
+        categorias.forEach(cat => {
+            const item = `
+                <div style="display: flex; align-items: center; gap: 0.5rem;">
+                    <input type="checkbox" class="chk-categoria-bateria" value="${cat.id}" id="cat-bat-${cat.id}" style="width: 18px; height: 18px;">
+                    <label for="cat-bat-${cat.id}" style="margin: 0; cursor: pointer;">${cat.nome}</label>
+                </div>`;
+            container.insertAdjacentHTML('beforeend', item);
+        });
+    } catch (e) { console.error(e); }
 }
 
 async function carregarBaterias() {
@@ -323,11 +346,12 @@ async function carregarBaterias() {
         }
 
         baterias.forEach(b => {
+            const nomesCats = b.categorias?.map(c => c.nome).join(', ') || 'Nenhuma';
             const linha = `
                 <tr>
                     <td style="text-align: center;"><input type="checkbox" class="chk-bateria" value="${b.id}" style="transform: scale(1.5);"></td>
                     <td>#${b.id}</td>
-                    <td><strong>${b.nome}</strong></td>
+                    <td><strong>${b.nome}</strong><br><small style="color: #666;">Categorias: ${nomesCats}</small></td>
                     <td>
                         <button class="btn btn-primario" onclick="abrirResultadosBateria(${b.id}, '${b.nome}')">Lançar Resultados ➔</button>
                         <button class="btn" style="background-color: #c0392b; color: white;" onclick="excluirBateria(${b.id})">🗑️ Excluir</button>
@@ -350,16 +374,26 @@ async function excluirBateria(id) {
 async function salvarBateria(e) {
     e.preventDefault();
     const inputNome = document.getElementById('nome-bateria');
+    const checkboxes = document.querySelectorAll('.chk-categoria-bateria:checked');
+    
+    if (checkboxes.length === 0) {
+        return alert("Selecione pelo menos uma categoria para esta bateria!");
+    }
+
+    const categoriasSelecionadas = Array.from(checkboxes).map(chk => ({ id: parseInt(chk.value) }));
+
     try {
         await apiFetch('/baterias', {
             method: 'POST',
             body: JSON.stringify({
                 nome: inputNome.value,
-                campeonato: { id: campeonatoAtivoId }
+                campeonato: { id: campeonatoAtivoId },
+                categorias: categoriasSelecionadas
             })
         });
         inputNome.value = '';
         carregarBaterias();
+        carregarCheckboxesCategorias();
     } catch (e) { alert('Erro ao salvar bateria.'); }
 }
 
@@ -376,11 +410,7 @@ function abrirResultadosBateria(id, nome) {
 async function carregarOpcoesPilotos() {
     const select = document.getElementById('select-piloto-resultado');
     try {
-        const categorias = await apiFetch(`/categorias/campeonato/${campeonatoAtivoId}`);
-        const idsCategorias = categorias.map(c => c.id);
-        
-        const todosPilotos = await apiFetch('/pilotos');
-        const pilotosValidos = todosPilotos.filter(p => p.categoria && idsCategorias.includes(p.categoria.id));
+        const pilotosValidos = await apiFetch(`/pilotos/bateria/${bateriaAtivaId}`);
 
         select.innerHTML = '<option value="">Selecione o piloto...</option>';
         pilotosValidos.forEach(p => {

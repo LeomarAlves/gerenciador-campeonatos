@@ -120,12 +120,19 @@
 
         <div class="card card-form" style="margin-bottom: 2rem;">
             <h3>Criar Nova Bateria</h3>
-            <form id="form-bateria" style="display: flex; gap: 1rem; align-items: flex-end;">
-                <div style="flex-grow: 1;">
-                    <label for="nome-bateria">Nome da Bateria (Grid):</label>
-                    <input type="text" id="nome-bateria" placeholder="Ex: Bateria 1 - F4 Mista" required>
+            <form id="form-bateria">
+                <div style="display: flex; gap: 1rem; align-items: flex-end; margin-bottom: 1rem;">
+                    <div style="flex-grow: 1;">
+                        <label for="nome-bateria">Nome da Bateria (Grid):</label>
+                        <input type="text" id="nome-bateria" placeholder="Ex: Bateria 1 - F4 Mista" required>
+                    </div>
+                    <button type="submit" class="btn btn-primario" style="margin-bottom: 0.2rem;">Salvar Bateria</button>
                 </div>
-                <button type="submit" class="btn btn-primario" style="margin-bottom: 1.2rem;">Salvar Bateria</button>
+                
+                <label>Categorias que compõem este Grid:</label>
+                <div id="container-categorias-bateria" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 0.5rem; background: #f9f9f9; padding: 1rem; border-radius: 4px; border: 1px solid #ddd;">
+                    <!-- Checkboxes dinâmicos aqui -->
+                </div>
             </form>
         </div>
 

@@ -1,11 +1,14 @@
 package com.leomar.gerenciador_campeonatos.controller;
 
+import com.leomar.gerenciador_campeonatos.model.Bateria;
 import com.leomar.gerenciador_campeonatos.model.Piloto;
+import com.leomar.gerenciador_campeonatos.repository.BateriaRepository;
 import com.leomar.gerenciador_campeonatos.repository.PilotoRepository;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Collections;
 import java.util.List;
 
 @RestController
@@ -14,15 +17,24 @@ import java.util.List;
 public class PilotoController {
 
     private final PilotoRepository pilotoRepository;
+    private final BateriaRepository bateriaRepository;
 
-    public PilotoController(PilotoRepository pilotoRepository) {
+    public PilotoController(PilotoRepository pilotoRepository, BateriaRepository bateriaRepository) {
         this.pilotoRepository = pilotoRepository;
+        this.bateriaRepository = bateriaRepository;
     }
 
     // GET: Lista todos os pilotos
     @GetMapping
     public List<Piloto> listarTodos() {
         return pilotoRepository.findAll();
+    }
+
+    @GetMapping("/bateria/{bateriaId}")
+    public List<Piloto> listarPorBateria(@PathVariable Long bateriaId) {
+        return bateriaRepository.findById(bateriaId)
+                .map(bateria -> pilotoRepository.findByCategoriaIn(bateria.getCategorias()))
+                .orElse(Collections.emptyList());
     }
 
     // POST: Cadastra um novo piloto

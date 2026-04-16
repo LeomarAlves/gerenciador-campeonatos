@@ -31,6 +31,14 @@ public class Bateria {
     @OneToMany(mappedBy = "bateria", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<ResultadoBateria> resultados;
 
+    @ManyToMany
+    @JoinTable(
+            name = "bateria_categoria",
+            joinColumns = @JoinColumn(name = "bateria_id"),
+            inverseJoinColumns = @JoinColumn(name = "categoria_id")
+    )
+    private List<Categoria> categorias;
+
     // ==========================================
     // GETTERS E SETTERS
     // ==========================================
@@ -81,5 +89,13 @@ public class Bateria {
 
     public void setResultados(List<ResultadoBateria> resultados) {
         this.resultados = resultados;
+    }
+
+    public List<Categoria> getCategorias() {
+        return categorias;
+    }
+
+    public void setCategorias(List<Categoria> categorias) {
+        this.categorias = categorias;
     }
 }
