@@ -42,4 +42,10 @@ public class CampeonatoController {
     public ResponseEntity<List<ClassificacaoDTO>> obterClassificacao(@PathVariable Long id) {
         return ResponseEntity.ok(pontuacaoService.gerarClassificacaoFinal(id));
     }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> excluir(@PathVariable Long id) {
+        campeonatoRepository.deleteById(id);
+        return ResponseEntity.noContent().build();
+    }
 }

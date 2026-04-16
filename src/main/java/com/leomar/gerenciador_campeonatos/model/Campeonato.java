@@ -14,12 +14,20 @@ public class Campeonato {
     private String nome;
 
     @JsonIgnore
-    @OneToMany(mappedBy = "campeonato", cascade = CascadeType.ALL)
+    @OneToMany(mappedBy = "campeonato", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Categoria> categorias;
 
     @JsonIgnore
-    @OneToMany(mappedBy = "campeonato", cascade = CascadeType.ALL)
+    @OneToMany(mappedBy = "campeonato", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Bateria> baterias;
+
+    @JsonIgnore
+    @OneToMany(mappedBy = "campeonato", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<GrupoGrid> grupoGrids;
+
+    @JsonIgnore
+    @OneToMany(mappedBy = "campeonato", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<AjustePenalizacao> ajustesPenalizacao;
 
 
     public Long getId() {
@@ -52,5 +60,21 @@ public class Campeonato {
 
     public void setBaterias(List<Bateria> baterias) {
         this.baterias = baterias;
+    }
+
+    public List<GrupoGrid> getGrupoGrids() {
+        return grupoGrids;
+    }
+
+    public void setGrupoGrids(List<GrupoGrid> grupoGrids) {
+        this.grupoGrids = grupoGrids;
+    }
+
+    public List<AjustePenalizacao> getAjustesPenalizacao() {
+        return ajustesPenalizacao;
+    }
+
+    public void setAjustesPenalizacao(List<AjustePenalizacao> ajustesPenalizacao) {
+        this.ajustesPenalizacao = ajustesPenalizacao;
     }
 }

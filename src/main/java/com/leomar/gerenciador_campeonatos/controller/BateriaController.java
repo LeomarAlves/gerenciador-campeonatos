@@ -36,4 +36,10 @@ public class BateriaController {
                 .map(bateria -> ResponseEntity.ok().body(bateria))
                 .orElse(ResponseEntity.notFound().build());
     }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> excluir(@PathVariable Long id) {
+        bateriaRepository.deleteById(id);
+        return ResponseEntity.noContent().build();
+    }
 }

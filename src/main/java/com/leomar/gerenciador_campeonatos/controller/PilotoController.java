@@ -55,4 +55,10 @@ public class PilotoController {
                 })
                 .orElse(ResponseEntity.notFound().build());
     }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> excluir(@PathVariable Long id) {
+        pilotoRepository.deleteById(id);
+        return ResponseEntity.noContent().build();
+    }
 }

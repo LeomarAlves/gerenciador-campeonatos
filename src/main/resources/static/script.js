@@ -118,12 +118,24 @@ async function carregarCampeonatos() {
                 <tr>
                     <td>#${camp.id}</td>
                     <td><strong>${camp.nome}</strong></td>
-                    <td><button class="btn btn-primario" onclick="abrirCampeonato(${camp.id}, '${camp.nome}')">Gerenciar ➔</button></td>
+                    <td>
+                        <button class="btn btn-primario" onclick="abrirCampeonato(${camp.id}, '${camp.nome}')">Gerenciar ➔</button>
+                        <button class="btn" style="background-color: #c0392b; color: white;" onclick="excluirCampeonato(${camp.id})">🗑️ Excluir</button>
+                    </td>
                 </tr>`;
             tabelaCorpo.insertAdjacentHTML('beforeend', linha);
         });
     } catch (e) {
         tabelaCorpo.innerHTML = `<tr><td colspan="3">Erro ao carregar dados.</td></tr>`;
+    }
+}
+
+async function excluirCampeonato(id) {
+    if (confirm("Tem certeza que deseja excluir este campeonato? Esta ação não pode ser desfeita e removerá todas as categorias, pilotos e baterias vinculadas!")) {
+        try {
+            await apiFetch(`/campeonatos/${id}`, { method: 'DELETE' });
+            carregarCampeonatos();
+        } catch (e) { alert('Erro ao excluir campeonato.'); }
     }
 }
 
@@ -170,11 +182,23 @@ async function carregarCategorias() {
                 <tr>
                     <td>#${cat.id}</td>
                     <td><strong>${cat.nome}</strong></td>
-                    <td><button class="btn btn-primario" onclick="abrirCategoria(${cat.id}, '${cat.nome}')">Ver Pilotos ➔</button></td>
+                    <td>
+                        <button class="btn btn-primario" onclick="abrirCategoria(${cat.id}, '${cat.nome}')">Ver Pilotos ➔</button>
+                        <button class="btn" style="background-color: #c0392b; color: white;" onclick="excluirCategoria(${cat.id})">🗑️ Excluir</button>
+                    </td>
                 </tr>`;
             tabelaCorpo.insertAdjacentHTML('beforeend', linha);
         });
     } catch (e) { console.error(e); }
+}
+
+async function excluirCategoria(id) {
+    if (confirm("Tem certeza que deseja excluir esta categoria? Esta ação não pode ser desfeita e removerá todos os pilotos e resultados vinculados!")) {
+        try {
+            await apiFetch(`/categorias/${id}`, { method: 'DELETE' });
+            carregarCategorias();
+        } catch (e) { alert('Erro ao excluir categoria.'); }
+    }
 }
 
 async function salvarCategoria(e) {
@@ -226,11 +250,23 @@ async function carregarPilotos() {
                     <td>#${p.id}</td>
                     <td>🏎️ <strong>${p.numeroKart}</strong></td>
                     <td>${p.nome}</td>
-                    <td><button class="btn btn-alerta" onclick="prepararEdicao(${p.id}, '${p.nome}', ${p.numeroKart})">✏️ Editar</button></td>
+                    <td>
+                        <button class="btn btn-alerta" onclick="prepararEdicao(${p.id}, '${p.nome}', ${p.numeroKart})">✏️ Editar</button>
+                        <button class="btn" style="background-color: #c0392b; color: white;" onclick="excluirPiloto(${p.id})">🗑️ Excluir</button>
+                    </td>
                 </tr>`;
             tabelaCorpo.insertAdjacentHTML('beforeend', linha);
         });
     } catch (e) { console.error(e); }
+}
+
+async function excluirPiloto(id) {
+    if (confirm("Tem certeza que deseja excluir este piloto? Esta ação não pode ser desfeita.")) {
+        try {
+            await apiFetch(`/pilotos/${id}`, { method: 'DELETE' });
+            carregarPilotos();
+        } catch (e) { alert('Erro ao excluir piloto.'); }
+    }
 }
 
 async function salvarPiloto(e) {
@@ -292,11 +328,23 @@ async function carregarBaterias() {
                     <td style="text-align: center;"><input type="checkbox" class="chk-bateria" value="${b.id}" style="transform: scale(1.5);"></td>
                     <td>#${b.id}</td>
                     <td><strong>${b.nome}</strong></td>
-                    <td><button class="btn btn-primario" onclick="abrirResultadosBateria(${b.id}, '${b.nome}')">Lançar Resultados ➔</button></td>
+                    <td>
+                        <button class="btn btn-primario" onclick="abrirResultadosBateria(${b.id}, '${b.nome}')">Lançar Resultados ➔</button>
+                        <button class="btn" style="background-color: #c0392b; color: white;" onclick="excluirBateria(${b.id})">🗑️ Excluir</button>
+                    </td>
                 </tr>`;
             tabelaCorpo.insertAdjacentHTML('beforeend', linha);
         });
     } catch (e) { console.error(e); }
+}
+
+async function excluirBateria(id) {
+    if (confirm("Tem certeza que deseja excluir esta bateria? Esta ação não pode ser desfeita e removerá todos os resultados vinculados!")) {
+        try {
+            await apiFetch(`/baterias/${id}`, { method: 'DELETE' });
+            carregarBaterias();
+        } catch (e) { alert('Erro ao excluir bateria.'); }
+    }
 }
 
 async function salvarBateria(e) {

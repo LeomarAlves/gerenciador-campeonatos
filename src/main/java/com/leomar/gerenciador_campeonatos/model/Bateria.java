@@ -4,6 +4,8 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
 
+import java.util.List;
+
 @Entity
 public class Bateria {
 
@@ -24,6 +26,10 @@ public class Bateria {
     @JoinColumn(name = "grupo_grid_id")
     @JsonIgnore
     private GrupoGrid grupoGrid;
+
+    @JsonIgnore
+    @OneToMany(mappedBy = "bateria", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<ResultadoBateria> resultados;
 
     // ==========================================
     // GETTERS E SETTERS
@@ -67,5 +73,13 @@ public class Bateria {
 
     public void setGrupoGrid(GrupoGrid grupoGrid) {
         this.grupoGrid = grupoGrid;
+    }
+
+    public List<ResultadoBateria> getResultados() {
+        return resultados;
+    }
+
+    public void setResultados(List<ResultadoBateria> resultados) {
+        this.resultados = resultados;
     }
 }

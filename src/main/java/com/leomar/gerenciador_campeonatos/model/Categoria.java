@@ -3,6 +3,8 @@ package com.leomar.gerenciador_campeonatos.model;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 
+import java.util.List;
+
 @Entity
 public class Categoria {
 
@@ -28,6 +30,10 @@ public class Categoria {
     @ManyToOne
     @JoinColumn(name = "tabela_pontuacao_id")
     private TabelaPontuacao tabelaPontuacao;
+
+    @JsonIgnore
+    @OneToMany(mappedBy = "categoria", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Piloto> pilotos;
 
     // ==========================================
     // GETTERS E SETTERS OBRIGATÓRIOS
@@ -71,5 +77,13 @@ public class Categoria {
 
     public void setTabelaPontuacao(TabelaPontuacao tabelaPontuacao) {
         this.tabelaPontuacao = tabelaPontuacao;
+    }
+
+    public List<Piloto> getPilotos() {
+        return pilotos;
+    }
+
+    public void setPilotos(List<Piloto> pilotos) {
+        this.pilotos = pilotos;
     }
 }
