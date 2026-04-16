@@ -9,7 +9,7 @@
 		<relativePath/> <!-- lookup parent from repository -->
 	</parent>
 	<groupId>com.leomar</groupId>
-	<artifactId>gerenciador-campeonatos</artifactId>
+	<artifactId>Gerenciador_Campeonatos</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
 	<name/>
 	<description/>

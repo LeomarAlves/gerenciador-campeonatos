@@ -2,6 +2,7 @@ package com.leomar.gerenciador_campeonatos.service;
 
 import com.leomar.gerenciador_campeonatos.model.*;
 import com.leomar.gerenciador_campeonatos.repository.ResultadoBateriaRepository;
+import com.leomar.gerenciador_campeonatos.repository.TabelaPontuacaoRepository;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -20,6 +21,9 @@ class PontuacaoServiceTest {
     @Mock
     private ResultadoBateriaRepository resultadoRepository;
 
+    @Mock
+    private TabelaPontuacaoRepository tabelaRepository;
+
     // Injeta o dublê dentro do nosso Service real
     @InjectMocks
     private PontuacaoService pontuacaoService;
@@ -35,6 +39,8 @@ class PontuacaoServiceTest {
         tabelaPro.getPontosPorPosicao().put(1, 25);
         tabelaPro.getPontosPorPosicao().put(2, 18);
         tabelaPro.getPontosPorPosicao().put(3, 15);
+
+        Mockito.when(tabelaRepository.findById(1L)).thenReturn(java.util.Optional.of(tabelaPro));
 
         // Criamos as categorias e vinculamos a tabela
         Categoria categoriaPro = new Categoria();
@@ -67,21 +73,9 @@ class PontuacaoServiceTest {
         Mockito.when(resultadoRepository.findByBateriaIdOrderByPosicaoChegadaAsc(1L))
                 .thenReturn(gridFalso);
 
-        // ==========================================
-        // 2. ACT (AÇÃO - TESTANDO SEU CÓDIGO REAL)
-        // ==========================================
-
         Long tabelaId = 1L;
 
         pontuacaoService.calcularPontosDaBateria(1L, tabelaId);
-
-        // ==========================================
-        // 3. ASSERT (VERIFICAÇÃO DO GABARITO)
-        // ==========================================
-
-        // O Piloto C cruzou a linha em 3º lugar no geral...
-        // MAS como o 2º lugar era Iniciante, o Piloto C é o 2º da categoria Pró!
-        // A tabela diz que o 2º lugar ganha 18 pontos. O seu Service percebeu isso?
 
         // assertEquals(VALOR_ESPERADO, VALOR_REAL_QUE_O_SEU_CODIGO_GEROU)
         assertEquals(25, resultado1.getPontos(), "O 1º da Pró deve ganhar 25 pts");
