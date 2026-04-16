@@ -71,7 +71,9 @@ class PontuacaoServiceTest {
         // 2. ACT (AÇÃO - TESTANDO SEU CÓDIGO REAL)
         // ==========================================
 
-        pontuacaoService.processarGridMisto(1L, tabelaId);
+        Long tabelaId = 1L;
+
+        pontuacaoService.calcularPontosDaBateria(1L, tabelaId);
 
         // ==========================================
         // 3. ASSERT (VERIFICAÇÃO DO GABARITO)
