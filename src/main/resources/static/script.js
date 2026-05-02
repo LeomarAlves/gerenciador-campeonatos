@@ -34,7 +34,6 @@ function inicializarApp() {
     // Ações de classificação e PDF (IDs atualizados conforme solicitado)
     document.getElementById('btn-preview-pdf')?.addEventListener('click', () => gerarPdfPost('preview'));
     document.getElementById('btn-imprimir-pdf')?.addEventListener('click', () => gerarPdfPost('download'));
-    document.getElementById('btn-implementar-mudancas')?.addEventListener('click', implementarMudancasOficiais);
     document.getElementById('btn-ok-classificacao')?.addEventListener('click', () => mostrarTela('tela-home'));
     
     // Outras ações
@@ -650,22 +649,6 @@ function gerarHtmlTabelaCategoria(nomeCat, pilotos, nomesBaterias) {
     });
 
     return html + `</tbody></table><p style="font-size: 0.85em; color: #555; margin-top: 5px;">* pontuação extra conforme regulamento</p></div>`;
-}
-
-function implementarMudancasOficiais() {
-    // Esconde as colunas e botões de ajuste (setinhas)
-    const colunasAjuste = document.querySelectorAll('.col-ajuste');
-    colunasAjuste.forEach(col => col.style.display = 'none');
-    
-    // Desativa o botão para confirmar que as mudanças foram aplicadas
-    const btn = document.getElementById('btn-implementar-mudancas');
-    if (btn) {
-        btn.disabled = true;
-        btn.style.opacity = '0.5';
-        btn.innerText = '✅ Mudanças Aplicadas';
-    }
-
-    alert("Ordem oficial salva! As setas de ajuste foram bloqueadas.");
 }
 
 function moverPosicaoMista(nomeCategoria, index, direcao) {
