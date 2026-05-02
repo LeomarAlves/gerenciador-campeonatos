@@ -2,11 +2,12 @@
 :root {
     --cor-fundo: #f4f7f6;
     --cor-asfalto: #2c3e50;
-    --cor-vermelho-corrida: #e74c3c;
-    --cor-vermelho-hover: #c0392b;
+    --cor-corrida: #8957e5;
+    --cor-hover: #503486;
     --cor-texto: #333333;
     --cor-branco: #ffffff;
     --cor-borda: #e0e0e0;
+    --cor-excluir:#ef3523;
 }
 
 * {
@@ -100,12 +101,12 @@ body {
 }
 
 .btn-primario {
-    background-color: var(--cor-vermelho-corrida);
+    background-color: var(--cor-corrida);
     color: var(--cor-branco);
 }
 
 .btn-primario:hover {
-    background-color: var(--cor-vermelho-hover);
+    background-color: var(--cor-hover);
 }
 /* Classe para esconder telas da nossa SPA */
 .oculta {

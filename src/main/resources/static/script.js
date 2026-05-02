@@ -116,7 +116,7 @@ async function carregarCampeonatos() {
                     <td><strong>${camp.nome}</strong></td>
                     <td>
                         <button class="btn btn-primario" onclick="abrirCampeonato(${camp.id}, '${camp.nome}')">Gerenciar ➔</button>
-                        <button class="btn" style="background-color: #c0392b; color: white;" onclick="excluirCampeonato(${camp.id})">🗑️ Excluir</button>
+                        <button class="btn" style="background-color: #ef3523; color: white;" onclick="excluirCampeonato(${camp.id})"> Excluir</button>
                     </td>
                 </tr>`;
             tabelaCorpo.insertAdjacentHTML('beforeend', linha);
@@ -179,7 +179,7 @@ async function carregarCategorias() {
                     <td><strong>${cat.nome}</strong></td>
                     <td>
                         <button class="btn btn-primario" onclick="abrirCategoria(${cat.id}, '${cat.nome}')">Ver Pilotos ➔</button>
-                        <button class="btn" style="background-color: #c0392b; color: white;" onclick="excluirCategoria(${cat.id})">🗑️ Excluir</button>
+                        <button class="btn" style="background-color: #ef3523; color: white;" onclick="excluirCategoria(${cat.id})"> Excluir</button>
                     </td>
                 </tr>`;
             tabelaCorpo.insertAdjacentHTML('beforeend', linha);
@@ -246,7 +246,7 @@ async function carregarPilotos() {
                     <td>${p.nome}</td>
                     <td>
                         <button class="btn btn-alerta" onclick="prepararEdicao(${p.id}, '${p.nome}', '${p.numeroKart}')">✏️ Editar</button>
-                        <button class="btn" style="background-color: #c0392b; color: white;" onclick="excluirPiloto(${p.id})">🗑️ Excluir</button>
+                        <button class="btn" style="background-color: #ef3523; color: white;" onclick="excluirPiloto(${p.id})"> Excluir</button>
                     </td>
                 </tr>`;
             tabelaCorpo.insertAdjacentHTML('beforeend', linha);
@@ -359,7 +359,7 @@ async function carregarBaterias() {
                     <td><strong>${b.nome}</strong><br><small style="color: #666;">Categorias: ${nomesCats}</small></td>
                     <td>
                         <button class="btn btn-primario" onclick="abrirResultadosBateria(${b.id}, '${b.nome}')">Lançar Resultados ➔</button>
-                        <button class="btn" style="background-color: #c0392b; color: white;" onclick="excluirBateria(${b.id})">🗑️ Excluir</button>
+                        <button class="btn" style="background-color: #ef3523; color: white;" onclick="excluirBateria(${b.id})"> Excluir</button>
                     </td>
                 </tr>`;
             tabelaCorpo.insertAdjacentHTML('beforeend', linha);
@@ -484,7 +484,7 @@ async function carregarResultados() {
                     <td><span class="badge-categoria">${r.piloto?.categoria?.nome || '-'}</span></td>
                     <td><strong>${r.pontos != null ? r.pontos : '-'} pts</strong></td>
                     <td>
-                        <button class="btn" style="background-color: #c0392b; color: white; padding: 2px 8px; font-size: 0.8em;" onclick="excluirResultado(${r.id})">🗑️ Remover</button>
+                        <button class="btn" style="background-color: #ef3523; color: white; padding: 2px 8px; font-size: 0.8em;" onclick="excluirResultado(${r.id})"> Remover</button>
                     </td>
                 </tr>`;
             tabelaCorpo.insertAdjacentHTML('beforeend', linha);
